@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset>
+  <!--*************************************************************** 
+    OPTIONS
+  *******************************************************************-->
+  <!-- Arguments: -->
+  <!-- <arg name="colors" /> -->
+  <arg name="extensions" value="php,inc" />
+  <arg name="parallel" value="16" />
+  <arg value="psv"/>
+  <!-- Dont show warnings -->
+  <!-- <arg name="warning-severity" value="0"/> -->
+  <!-- Include/exlude files and folders -->
+  <file>src</file>
+  <file>tests</file>
+  <exclude-pattern>/vendor/</exclude-pattern>
+
+  <!--*************************************************************** 
+    STANDARD
+  *******************************************************************-->
+  <rule ref="PSR12"/>
+  <!-- Exclude rules from PSR12 -->
+  <rule ref="PSR12">
+    <exclude name="PSR1.Files.SideEffects.FoundWithSymbols" />
+    <exclude name="PSR2.Classes.PropertyDeclaration.Underscore" />
+    <exclude name="PSR12.Functions.ReturnTypeDeclaration.SpaceBeforeColon" /> <!-- This is handled by SlevomatCodingStandard.TypeHints -->
+    <!-- <exclude name="PSR2.Methods.MethodDeclaration.Underscore" /> -->
+    <!-- <exclude name="PSR12.Classes.ClassInstantiation.MissingParentheses" /> -->
+    <!-- <exclude name="PSR12.Files.ImportStatement.LeadingSlash" />  -->
+    <!-- <exclude name="Squiz.Functions.FunctionDeclarationArgumentSpacing.SpaceBeforeEquals" /> -->
+    <!-- <exclude name="Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingAfterHint" /> -->
+  </rule>
+
+  <!--*************************************************************** 
+    EXTENSIONS - MORE RULES
+  *******************************************************************-->
+  <!-- Add rules from slevomat https://github.com/slevomat/coding-standard -->
+  <config name="installed_paths" value="../../slevomat/coding-standard"/>
+  <!-- Classes additional rules -->
+  <rule ref="SlevomatCodingStandard.Classes.ClassStructure"/> 
+  <!-- Detect Useless stuff -->
+  <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses"/>
+  <!-- Typehinting -->
+  <rule ref="SlevomatCodingStandard.TypeHints.NullableTypeForNullDefaultValue"/>
+  <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint"/>
+  <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHintSpacing">
+    <properties>
+      <property name="spacesCountBeforeColon" value="1"/>
+    </properties>
+  </rule>
+  <rule ref="SlevomatCodingStandard.TypeHints.DeclareStrictTypes">
+    <properties>
+      <property name="spacesCountAroundEqualsSign" value="0"/>
+    </properties>
+  </rule>
+  <!-- Commenting -->
+  <rule ref="SlevomatCodingStandard.Commenting.EmptyComment"/>
+  <rule ref="Squiz.Commenting.BlockComment" />
+  <rule ref="Squiz.Commenting.DocCommentAlignment" />
+
+  <!--*************************************************************** 
+    RULES TO EXCLUDE FROM SPECIFIC FILES:
+  *******************************************************************-->
+  <rule ref="PSR1.Classes.ClassDeclaration.MultipleClasses">
+    <exclude-pattern>/tests/</exclude-pattern>
+  </rule>
+
+</ruleset>
