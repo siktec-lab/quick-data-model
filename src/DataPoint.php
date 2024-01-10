@@ -10,6 +10,8 @@ use Attribute;
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class DataPoint
 {
+    public int $position = 0;
+
     public string $name = "";
 
     public array $types = [];

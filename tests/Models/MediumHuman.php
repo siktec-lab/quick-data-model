@@ -6,9 +6,13 @@ namespace QDM\Tests\Models;
 
 use QDM\DataPoint;
 use QDM\DataModel;
+use QDM\Traits;
 
-class MediumHuman extends DataModel
+class MediumHuman extends DataModel implements \ArrayAccess, \Iterator
 {
+    use Traits\ArrayAccessTrait;
+    use Traits\IteratorTrait;
+
     #[DataPoint(required: true)]
     public ?string $name = "John Doe";
 
@@ -20,4 +24,6 @@ class MediumHuman extends DataModel
 
     #[DataPoint]
     public string|float|int $height = 6.;
+
+    public string $im_not_a_datapoint = "I'm not a datapoint";
 }

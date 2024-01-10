@@ -9,10 +9,12 @@ use ReflectionNamedType;
 use ReflectionUnionType;
 use ReflectionIntersectionType;
 use ReflectionProperty;
+use Stringable;
 
-abstract class DataModel
+abstract class DataModel implements Stringable
 {
-    private bool $is_initialized = false;
+    protected array $data_point_index = [];
+    protected bool $is_initialized = false;
     private array $data_points = [];
 
     /**
@@ -74,11 +76,97 @@ abstract class DataModel
             return;
         }
 
+        // Filter the data points to revert:
+        $datapoints = array_filter($datapoints, fn($name) => $this->has($name));
+
         // Revert to the default value of the data points:
         $revert = count($datapoints) ? $datapoints : array_keys($this->data_points);
         foreach ($revert as $name) {
             $this->{$name} = $this->data_points[$name]->default;
         }
+    }
+
+    /**
+     * Check if a data point exists
+     */
+    public function has(string $name) : bool
+    {
+        return array_key_exists($name, $this->data_points);
+    }
+
+    /**
+     * Get a data point
+     */
+    public function get(string $name) : mixed
+    {
+        return $this->has($name) ? $this->{$name} : null;
+    }
+
+    /**
+     * Set a data point
+     * $errors will be filled with any errors that occurred during the initialization
+     */
+    public function set(string $name, mixed $value, array &$errors = []) : bool
+    {
+        // If its not initialized then initialize it:
+        if (!$this->is_initialized) {
+            $this->initialize();
+        }
+
+        if (!$this->has($name)) {
+            $errors[] = "Data point '{$name}' does not exist";
+            return false;
+        }
+
+        $dp = $this->data_points[$name];
+
+        // Apply the custom filter if any:
+        if (!is_null($dp->filter) && is_callable($dp->filter)) {
+            $value = $dp->filter($value);
+        }
+
+        //If its a custom setter then use it:
+        if (!is_null($dp->setter) && is_callable($dp->setter)) {
+            $value = $dp->setter($value, $errors);
+            if (!empty($errors)) {
+                return false;
+            }
+            $this->{$name} = $value;
+            return true;
+        }
+
+        // If its required and its null then we have an error:
+        if ($dp->required && is_null($value)) {
+            $errors[] = "Required data point '{$name}' cannot be null";
+            return false;
+        }
+
+        // If its an array or object maybe its a nested data model:
+        if ($dp->is_data_model) {
+            // Only object array or string are allowed:
+            if (!is_array($value) && !is_object($value) && !is_string($value)) {
+                $errors[] = "Data point '{$name}' must be an array, object or string";
+                return false;
+            }
+
+            // Build the data model:
+            $dm = new $dp->types[0]();
+            if (!$dm->from($value, $errors)) {
+                return false;
+            }
+            $this->{$name} = $dm;
+            return true;
+        }
+
+        // Type check:
+        if (!in_array(self::typeName(gettype($value)), $dp->types) && !(is_null($value) && $dp->nullable)) {
+            $errors[] = "Data point '{$name}' must be of type " . implode("|", $dp->types);
+            return false;
+        }
+
+        // Set the value:
+        $this->{$name} = $value;
+        return true;
     }
 
     /**
@@ -131,54 +219,13 @@ abstract class DataModel
         if (!$this->is_initialized) {
             $this->initialize();
         }
-
         $init_errors = count($errors);
         $keys = array_keys($data);
         foreach ($this->data_points as $key => $dp) {
-            // Skip if not in the update list:
             if (!in_array($key, $keys)) {
                 continue;
             }
-            $value = $data[$key];
-
-            // Apply the custom filter if any:
-            if (!is_null($dp->filter) && is_callable($dp->filter)) {
-                $value = $dp->filter($value);
-            }
-
-            //If its a custom setter then use it:
-            if (!is_null($dp->setter) && is_callable($dp->setter)) {
-                $this->{$key} = $dp->setter($value);
-                continue;
-            }
-
-            // If its required and its null then we have an error:
-            if ($dp->required && is_null($value)) {
-                $errors[] = "Required data point '{$key}' cannot be null";
-                continue;
-            }
-
-            // If its an array or object maybe its a nested data model:
-            if ($dp->is_data_model) {
-                // Only object array or string are allowed:
-                if (!is_array($value) && !is_object($value) && !is_string($value)) {
-                    $errors[] = "Data point '{$key}' must be an array, object or string";
-                    continue;
-                }
-                // Build the data model:
-                $dm = new $dp->types[0]();
-                if ($dm->from($value, $errors)) {
-                    $this->{$key} = $dm;
-                }
-                continue;
-            }
-            // Type check:
-            if (!in_array(self::typeName(gettype($value)), $dp->types) && !(is_null($value) && $dp->nullable)) {
-                $errors[] = "Data point '{$key}' must be of type " . implode("|", $dp->types);
-                continue;
-            }
-            // Set the value:
-            $this->{$key} = $value;
+            $this->set($key, $data[$key], $errors);
         }
 
         return count($errors) == $init_errors;
@@ -191,6 +238,7 @@ abstract class DataModel
     private function dataPoints() : array
     {
         $data_points = [];
+        $position = 0;
         $reflection = new ReflectionClass($this);
         foreach ($reflection->getProperties() as $property) {
             $attributes = $property->getAttributes(DataPoint::class);
@@ -198,10 +246,15 @@ abstract class DataModel
                 $dp = $attributes[0]->newInstance();
                 $dp->name = $property->getName();
                 $dp->default = self::detectDefault($property, $this);
+                $dp->position = $position++;
                 self::parseTypes($property->getType(), $dp);
                 $data_points[$dp->name] = $dp;
             }
         }
+
+        // A column of positions with names:
+        $this->data_point_index = array_column($data_points, "name", "position");
+
         // var_dump($data_points);
         return $data_points;
     }
@@ -288,5 +341,13 @@ abstract class DataModel
             default:
                 return $type;
         }
+    }
+
+    /**
+     * Convert the data model to a string (json)
+     */
+    public function __toString() : string
+    {
+        return $this->toJson();
     }
 }
