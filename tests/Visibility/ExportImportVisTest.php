@@ -25,14 +25,14 @@ class ExportImportVisTest extends TestCase
         $errors = [];
         $status = $car->from([
             "brand"     => "Toyota",    // Will be updated & exported
-            "model"     => "Corolla",   // Will be updated & exported 
+            "model"     => "Corolla",   // Will be updated & exported
             "year"      => 2010,        // Will be updated but not exported (export: false)
             "color"     => "red",       // Will not be updated but exported as default "white" (import: false)
             "code"      => "123456",    // Will be updated but not exported its protected (not export override)
             "owner"     => "John Doe"   // Will be updated & exported although protected (export: true)
         ]);
         $data = $car->toArray();
-        
+
         $this->assertTrue($status);
         $this->assertCount(0, $errors);
         $this->assertEquals("Toyota", $data["brand"]);
@@ -41,28 +41,28 @@ class ExportImportVisTest extends TestCase
         $this->assertFalse(array_key_exists("year", $data));
         $this->assertEquals("white", $data["color"]);
         $this->assertFalse(array_key_exists("code", $data));
-        $this->assertEquals("123456", $car["code"]); 
+        $this->assertEquals("123456", $car["code"]);
         $this->assertEquals("John Doe", $data["owner"]);
     }
 
-    public function testVisibilityWithDirectMethods() : void 
+    public function testVisibilityWithDirectMethods() : void
     {
         $car = new Models\SimpleCar();
         $car->from([
             "brand"     => "Toyota",    // Will be updated & exported
-            "model"     => "Corolla",   // Will be updated & exported 
+            "model"     => "Corolla",   // Will be updated & exported
             "year"      => 2010,        // Will be updated but not exported (export: false)
             "color"     => "red",       // Will not be updated but exported as default "white" (import: false)
             "code"      => "123456",    // Will be updated but not exported its protected (not export override)
             "owner"     => "John Doe"   // Will be updated & exported although protected (export: true)
         ]);
-        
+
         // Test has method with visibility checks:
         $this->assertTrue($car->has("year")); // By default has will not check for visibility
         $this->assertFalse($car->has("year", export: true)); // Now it will check for visibility
         $this->assertTrue($car->has("color", export: true));
         $this->assertFalse($car->has("color", import: true));
-        
+
         // Test get method with visibility checks:
         $this->assertEquals(2010, $car->get("year")); // By default get will not check for export visibility
         $this->assertNull($car->get("year", export: true)); // Now it will check for export visibility

@@ -7,7 +7,6 @@ namespace QDM\Tests\Models;
 use QDM\DataPoint;
 use QDM\DataModel;
 use QDM\Traits;
-
 use ArrayAccess;
 
 class SimpleCar extends DataModel implements ArrayAccess
@@ -33,5 +32,4 @@ class SimpleCar extends DataModel implements ArrayAccess
 
     #[DataPoint(export: true)]
     protected ?string $owner = null; // Private but forced to be exported
-
 }

@@ -7,7 +7,6 @@ namespace QDM\Tests\Models;
 use QDM\DataPoint;
 use QDM\DataModel;
 use QDM\Traits;
-
 use ArrayAccess;
 
 class MediumCar extends DataModel implements ArrayAccess

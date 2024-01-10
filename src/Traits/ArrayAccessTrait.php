@@ -8,8 +8,8 @@ trait ArrayAccessTrait
 {
     final public function offsetExists(mixed $offset) : bool
     {
-        return is_string($offset) ? 
-            $this->has($offset, export : true) && !is_null($this->{$offset}) : 
+        return is_string($offset) ?
+            $this->has($offset, export : true) && !is_null($this->{$offset}) :
             false;
     }
 

@@ -179,10 +179,10 @@ abstract class DataModel implements Stringable
 
         // Type check:
         if (
-            !in_array($my_type = self::typeName(gettype($value)), $dp->types) && 
-            !(is_null($value) && $dp->nullable)) 
-        {
-            $errors[] = "Data point '{$name}' must be of type " . 
+            !in_array($my_type = self::typeName(gettype($value)), $dp->types) &&
+            !(is_null($value) && $dp->nullable)
+        ) {
+            $errors[] = "Data point '{$name}' must be of type " .
                         implode("|", $dp->types) . " - Got " . $my_type;
             return false;
         }
@@ -291,7 +291,6 @@ abstract class DataModel implements Stringable
         foreach ($reflection->getProperties() as $property) {
             $attributes = $property->getAttributes(DataPoint::class);
             if (count($attributes) > 0) {
-
                 // Basic data point info:
                 $dp = $attributes[0]->newInstance();
                 $dp->name = $property->getName();
@@ -300,7 +299,7 @@ abstract class DataModel implements Stringable
 
                 // Parse the types and set the nullable flag:
                 self::parseTypes($property->getType(), $dp);
-                
+
                 // Determine visibility: First throw if any thing other than public or protected is used:
                 if (!$property->isProtected() && !$property->isPublic()) {
                     throw new \Exception(
@@ -342,25 +341,20 @@ abstract class DataModel implements Stringable
         }
         // Named type:
         if ($type instanceof ReflectionNamedType) {
-            
             $types[] = self::typeName($type->getName());
             $point->types = $types;
-
         } elseif ($type instanceof ReflectionUnionType) {
-            
             foreach ($type->getTypes() as $union_type) {
                 $point->types[] = self::typeName($union_type->getName());
             }
 
         // Intersection type: not supported so we just save them as their string representation
         } elseif ($type instanceof ReflectionIntersectionType) {
-            
             $intersected = [];
             foreach ($type->getTypes() as $intersection_type) {
                 $intersected[] = (string)$intersection_type;
             }
             $point->types[] = implode("&", self::typeName($intersected));
-
         }
 
         // We only support one data model type not multiple:

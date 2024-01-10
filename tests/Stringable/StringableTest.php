@@ -28,7 +28,7 @@ class StringableTest extends TestCase
             "nickname"  => "JD",
         ]);
         $this->assertEquals(
-            '{"name":"Marry Jane","age":20,"nickname":"JD"}', 
+            '{"name":"Marry Jane","age":20,"nickname":"JD"}',
             (string)$human
         );
     }
