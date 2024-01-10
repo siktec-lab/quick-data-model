@@ -8,20 +8,20 @@ trait ArrayAccessTrait
 {
     final public function offsetExists(mixed $offset) : bool
     {
-        return is_string($offset) ?
-                ($this->has($offset) && !is_null($this->{$offset})) :
-                false;
+        return is_string($offset) ? 
+            $this->has($offset, export : true) && !is_null($this->{$offset}) : 
+            false;
     }
 
     final public function offsetGet(mixed $offset) : mixed
     {
-        return $this->has($offset) ? $this->{$offset} : null;
+        return $this->get($offset, export : false);
     }
 
     final public function offsetSet(mixed $offset, mixed $value) : void
     {
         if (is_string($offset)) {
-            $this->set($offset, $value);
+            $this->set($offset, $value, import : false);
         }
     }
 

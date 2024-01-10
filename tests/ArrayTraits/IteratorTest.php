@@ -19,7 +19,7 @@ final class IteratorTest extends TestCase
         return;
     }
 
-    public function testArrayGetExists() : void
+    public function testSimpleIterator() : void
     {
         $human = new Models\MediumHuman();
         $human->from([

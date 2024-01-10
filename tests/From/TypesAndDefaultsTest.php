@@ -24,17 +24,17 @@ final class TypesAndDefaultsTest extends TestCase
         $human = new Models\SimpleHuman();
         $this->assertEquals("John Doe", $human->name);
         $this->assertEquals(-1, $human->age);
-        $this->assertEquals(null, $human->nickname);
+        $this->assertNull($human->nickname);
 
         $arr = $human->toArray();
         $this->assertEquals("John Doe", $arr["name"]);
         $this->assertEquals(-1, $arr["age"]);
-        $this->assertEquals(null, $arr["nickname"]);
+        $this->assertNull($arr["nickname"]);
 
         $json = json_decode($human->toJson(), true);
         $this->assertEquals("John Doe", $json["name"]);
         $this->assertEquals(-1, $json["age"]);
-        $this->assertEquals(null, $json["nickname"]);
+        $this->assertNull($json["nickname"]);
     }
 
     public function testFormArray() : void
@@ -47,7 +47,7 @@ final class TypesAndDefaultsTest extends TestCase
             "nickname"  => "JD",
         ]);
 
-        $this->assertEquals(true, $init);
+        $this->assertTrue($init);
         $this->assertEquals("Marry Jane", $human->name);
         $this->assertEquals(20, $human->age);
         $this->assertEquals("JD", $human->nickname);
@@ -58,10 +58,10 @@ final class TypesAndDefaultsTest extends TestCase
             "age" => 20,
         ]);
 
-        $this->assertEquals(true, $init);
+        $this->assertTrue($init);
         $this->assertEquals("Marry Jane", $human->name);
         $this->assertEquals(20, $human->age);
-        $this->assertEquals(null, $human->nickname);
+        $this->assertNull($human->nickname);
     }
 
     public function testRequiredProperty() : void
@@ -72,8 +72,8 @@ final class TypesAndDefaultsTest extends TestCase
         // trying to set it to null so it should fail
         // Giving us an error and setting the default value
         $status = $human->from(["name" => null], $errors);
-        $this->assertEquals(false, $status);
-        $this->assertEquals(1, count($errors));
+        $this->assertFalse($status);
+        $this->assertCount(1, $errors);
         $this->assertEquals("John Doe", $human->name);
     }
 
@@ -84,8 +84,8 @@ final class TypesAndDefaultsTest extends TestCase
         $errors = [];
         $status = $human->from(["age" => "Very Old"], $errors);
 
-        $this->assertEquals(false, $status);
-        $this->assertEquals(1, count($errors));
+        $this->assertFalse($status);
+        $this->assertCount(1, $errors);
         $this->assertEquals(-1, $human->age);
     }
 
@@ -94,26 +94,26 @@ final class TypesAndDefaultsTest extends TestCase
         $human = new Models\MediumHuman();
         $errors = [];
         $status = $human->from(["height" => 7], $errors);
-        $this->assertEquals(true, $status);
-        $this->assertEquals(0, count($errors));
+        $this->assertTrue($status);
+        $this->assertCount(0, $errors);
         $this->assertEquals(7, $human->height);
 
         $errors = [];
         $status = $human->from(["height" => 7.0], $errors);
-        $this->assertEquals(true, $status);
-        $this->assertEquals(0, count($errors));
+        $this->assertTrue($status);
+        $this->assertCount(0, $errors);
         $this->assertEquals(7.0, $human->height);
 
         $errors = [];
         $status = $human->from(["height" => "1.75m"], $errors);
-        $this->assertEquals(true, $status);
-        $this->assertEquals(0, count($errors));
+        $this->assertTrue($status);
+        $this->assertCount(0, $errors);
         $this->assertEquals("1.75m", $human->height);
 
         $errors = [];
         $status = $human->from(["height" => [2, "m"]], $errors);
-        $this->assertEquals(false, $status);
-        $this->assertEquals(1, count($errors));
+        $this->assertFalse($status);
+        $this->assertCount(1, $errors);
         $this->assertEquals(6.0, $human->height);
     }
 

@@ -10,6 +10,7 @@ use Attribute;
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class DataPoint
 {
+
     public int $position = 0;
 
     public string $name = "";
@@ -22,10 +23,14 @@ class DataPoint
 
     public bool $is_data_model = false;
 
+    public bool $visible = true;
+
     public function __construct(
         public bool $required = false,
         public mixed $filter = null,
-        public mixed $setter = null
+        public mixed $setter = null,
+        public ?bool $export = null,
+        public ?bool $import = null
     ) {
     }
 }

@@ -7,8 +7,10 @@ namespace QDM\Tests\Models;
 use QDM\DataPoint;
 use QDM\DataModel;
 use QDM\Traits;
+use ArrayAccess;
+use Iterator;
 
-class MediumHuman extends DataModel implements \ArrayAccess, \Iterator
+class MediumHuman extends DataModel implements ArrayAccess, Iterator
 {
     use Traits\ArrayAccessTrait;
     use Traits\IteratorTrait;

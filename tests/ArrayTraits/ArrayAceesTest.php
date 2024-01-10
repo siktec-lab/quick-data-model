@@ -33,7 +33,7 @@ final class ArrayAceesTest extends TestCase
         $this->assertEquals(20, $human["age"]);
         $this->assertEquals("JD", $human["nickname"]);
         $this->assertEquals(5.5, $human["height"]);
-        $this->assertEquals(null, $human["not_exists"]);
+        $this->assertNull($human["not_exists"]);
     }
 
     public function testArrayIsset() : void
@@ -45,11 +45,11 @@ final class ArrayAceesTest extends TestCase
             "height"    => 5.5,
         ]);
 
-        $this->assertEquals(true, isset($human["name"]));
-        $this->assertEquals(true, isset($human["age"]));
-        $this->assertEquals(false, isset($human["nickname"]));
-        $this->assertEquals(true, isset($human["height"]));
-        $this->assertEquals(false, isset($human["not_exists"]));
+        $this->assertTrue(isset($human["name"]));
+        $this->assertTrue(isset($human["age"]));
+        $this->assertFalse(isset($human["nickname"])); // Nickname is null so it should not be considered not set
+        $this->assertTrue(isset($human["height"]));
+        $this->assertFalse(isset($human["not_exists"]));
     }
 
     public function testArrayEmpty() : void
@@ -62,11 +62,11 @@ final class ArrayAceesTest extends TestCase
             "height"    => 5.5,
         ]);
 
-        $this->assertEquals(false, empty($human["name"]));
-        $this->assertEquals(false, empty($human["age"]));
-        $this->assertEquals(true, empty($human["nickname"]));
-        $this->assertEquals(false, empty($human["height"]));
-        $this->assertEquals(true, empty($human["not_exists"]));
+        $this->assertFalse(empty($human["name"]));
+        $this->assertFalse(empty($human["age"]));
+        $this->assertTrue(empty($human["nickname"]));
+        $this->assertFalse(empty($human["height"]));
+        $this->assertTrue(empty($human["not_exists"]));
     }
 
     public function testArraySet() : void
@@ -81,7 +81,7 @@ final class ArrayAceesTest extends TestCase
 
         $this->assertEquals("Marry Jane", $human["name"]);
         $this->assertEquals(20, $human["age"]);
-        $this->assertEquals(null, $human["nickname"]);
+        $this->assertNull($human["nickname"]);
         $this->assertEquals(5.5, $human["height"]);
 
         $human["name"] = "Mark Twain";
@@ -94,7 +94,7 @@ final class ArrayAceesTest extends TestCase
         $this->assertEquals(21, $human["age"]);
         $this->assertEquals("MT", $human["nickname"]);
         $this->assertEquals(6.0, $human["height"]);
-        $this->assertEquals(null, $human["will_be_ignores"]);
+        $this->assertNull($human["will_be_ignores"]);
 
         $human["name"] = null; // Should be ignored because it is not valid name is required
         $this->assertEquals("Mark Twain", $human["name"]);
@@ -124,9 +124,9 @@ final class ArrayAceesTest extends TestCase
 
         $this->assertEquals("John Doe", $human["name"]);
         $this->assertEquals(-1, $human["age"]);
-        $this->assertEquals(null, $human["nickname"]);
+        $this->assertNull($human["nickname"]);
         $this->assertEquals(6.0, $human["height"]);
-        $this->assertEquals(null, $human["will_be_ignores"]);
+        $this->assertNull($human["will_be_ignores"]);
     }
     public static function setUpBeforeClass() : void
     {

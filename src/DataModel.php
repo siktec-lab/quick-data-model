@@ -19,10 +19,11 @@ abstract class DataModel implements Stringable
 
     /**
      * DataModel constructor is used to initialize the data points as the current defaults
+     * @throws \Exception if a data points are not public or protected
      */
     public function __construct()
     {
-        $this->initialize();
+        $this->initialize(true);
     }
 
     /**
@@ -89,28 +90,41 @@ abstract class DataModel implements Stringable
     /**
      * Check if a data point exists
      */
-    public function has(string $name) : bool
+    public function has(string $name, bool $export = false, bool $import = false) : bool
     {
-        return array_key_exists($name, $this->data_points);
+        if (!array_key_exists($name, $this->data_points)) {
+            return false;
+        }
+        if ($export && !$this->data_points[$name]->export) {
+            return false;
+        }
+        if ($import && !$this->data_points[$name]->import) {
+            return false;
+        }
+        return true;
     }
 
     /**
-     * Get a data point
+     * Get a data point value
      */
-    public function get(string $name) : mixed
+    public function get(string $name, bool $export = false) : mixed
     {
-        return $this->has($name) ? $this->{$name} : null;
+        if (($dp = $this->data_points[$name] ?? null) == null) {
+            return null;
+        }
+        return !$export ? $this->{$name} : ($dp->export ? $this->{$name} : null);
     }
 
     /**
      * Set a data point
      * $errors will be filled with any errors that occurred during the initialization
      */
-    public function set(string $name, mixed $value, array &$errors = []) : bool
+    public function set(string $name, mixed $value, array &$errors = [], bool $import = false) : bool
     {
         // If its not initialized then initialize it:
-        if (!$this->is_initialized) {
-            $this->initialize();
+        if (!$this->is_initialized && !$this->initialize(false)) {
+            $errors[] = "Data model could not be initialized declaration error";
+            return false;
         }
 
         if (!$this->has($name)) {
@@ -119,6 +133,11 @@ abstract class DataModel implements Stringable
         }
 
         $dp = $this->data_points[$name];
+
+        // Should we import this data point:
+        if ($import && !$dp->import) {
+            return false; // We are not raising an error here because its not an error we just ignore it.
+        }
 
         // Apply the custom filter if any:
         if (!is_null($dp->filter) && is_callable($dp->filter)) {
@@ -176,14 +195,17 @@ abstract class DataModel implements Stringable
     public function toArray() : array
     {
         // If its not initialized then initialize it:
-        if (!$this->is_initialized) {
-            $this->initialize();
+        if (!$this->is_initialized && !$this->initialize(false)) {
+            return [];
         }
 
         // Build the array:
         $data = [];
         foreach ($this->data_points as $dp) {
-            $data[$dp->name] = $this->{$dp->name};
+            // We don't use get for performance reasons:
+            // get will check if the data point exists and then get it
+            // we already know it exists so we just get it
+            $data[$dp->name] = $dp->export ? $this->{$dp->name} : null;
         }
 
         return $data;
@@ -201,11 +223,20 @@ abstract class DataModel implements Stringable
     /**
      * Initialize the data model
      * This will initialize the data points and set the default values
+     * @throws \Exception if a data point is not public or protected unless throw is false
      */
-    protected function initialize() : void
+    protected function initialize(bool $throw = true) : bool
     {
-        $this->data_points    = $this->dataPoints();
-        $this->is_initialized = true;
+        try {
+            $this->data_points    = $this->dataPoints();
+            $this->is_initialized = true;
+        } catch (\Exception $e) {
+            if ($throw) {
+                throw $e;
+            }
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -216,8 +247,9 @@ abstract class DataModel implements Stringable
     protected function fromArray(array $data, array &$errors = []) : bool
     {
         // If its not initialized then initialize it:
-        if (!$this->is_initialized) {
-            $this->initialize();
+        if (!$this->is_initialized && !$this->initialize(false)) {
+            $errors[] = "Data model could not be initialized declaration error";
+            return false;
         }
         $init_errors = count($errors);
         $keys = array_keys($data);
@@ -225,7 +257,9 @@ abstract class DataModel implements Stringable
             if (!in_array($key, $keys)) {
                 continue;
             }
-            $this->set($key, $data[$key], $errors);
+            // We set import to true because we are importing from an array
+            // and we want to respect the visibility of the data point
+            $this->set($key, $data[$key], $errors, import: true);
         }
 
         return count($errors) == $init_errors;
@@ -234,6 +268,7 @@ abstract class DataModel implements Stringable
     /**
      * Get the data points of the data model
      * @return array<string, DataPoint>
+     * @throws \Exception if a data point is not public or protected
      */
     private function dataPoints() : array
     {
@@ -243,11 +278,27 @@ abstract class DataModel implements Stringable
         foreach ($reflection->getProperties() as $property) {
             $attributes = $property->getAttributes(DataPoint::class);
             if (count($attributes) > 0) {
+
+                // Basic data point info:
                 $dp = $attributes[0]->newInstance();
                 $dp->name = $property->getName();
                 $dp->default = self::detectDefault($property, $this);
                 $dp->position = $position++;
+
+                // Parse the types and set the nullable flag:
                 self::parseTypes($property->getType(), $dp);
+                
+                // Determine visibility: First throw if any thing other than public or protected is used:
+                if (!$property->isProtected() && !$property->isPublic()) {
+                    throw new \Exception(
+                        "Data point '{$dp->name}' cannot be anything other than 'public' or 'protected'"
+                    );
+                }
+                $dp->visible = $property->isPublic();
+                $dp->export = $dp->export ?? $dp->visible;
+                $dp->import = $dp->import ?? true;
+
+                // Save the instance of the data point:
                 $data_points[$dp->name] = $dp;
             }
         }

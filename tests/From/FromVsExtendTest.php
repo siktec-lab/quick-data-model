@@ -28,7 +28,7 @@ final class FromVsExtendTest extends TestCase
             "nickname"  => "JD",
         ]);
 
-        $this->assertEquals(true, $status);
+        $this->assertTrue($status);
         $this->assertEquals("Marry Jane", $human->name);
         $this->assertEquals(20, $human->age);
         $this->assertEquals("JD", $human->nickname);
@@ -38,10 +38,10 @@ final class FromVsExtendTest extends TestCase
             "name"      => "Mark Twain",
         ]);
 
-        $this->assertEquals(true, $status);
+        $this->assertTrue($status);
         $this->assertEquals("Mark Twain", $human->name);
         $this->assertEquals(-1, $human->age);
-        $this->assertEquals(null, $human->nickname);
+        $this->assertNull($human->nickname);
     }
 
     public function testExtendTwiceOverride() : void
@@ -53,7 +53,7 @@ final class FromVsExtendTest extends TestCase
             "nickname"  => "JD",
         ]);
 
-        $this->assertEquals(true, $status);
+        $this->assertTrue($status);
         $this->assertEquals("Marry Jane", $human->name);
         $this->assertEquals(20, $human->age);
         $this->assertEquals("JD", $human->nickname);
@@ -63,7 +63,7 @@ final class FromVsExtendTest extends TestCase
             "name"      => "Mark Twain",
         ]);
 
-        $this->assertEquals(true, $status);
+        $this->assertTrue($status);
         $this->assertEquals("Mark Twain", $human->name);
         $this->assertEquals(20, $human->age);
         $this->assertEquals("JD", $human->nickname);
@@ -75,12 +75,12 @@ final class FromVsExtendTest extends TestCase
         $status = $human->from([
             "name"      => "Moshe Dayan",
         ]);
-        $this->assertEquals(true, $status);
+        $this->assertTrue($status);
         $status = $human->extend([
             "age"       => 45,
             "nickname"  => "MD",
         ]);
-        $this->assertEquals(true, $status);
+        $this->assertTrue($status);
         $this->assertEquals("Moshe Dayan", $human->name);
         $this->assertEquals(45, $human->age);
         $this->assertEquals("MD", $human->nickname);
@@ -89,7 +89,7 @@ final class FromVsExtendTest extends TestCase
         $human->revert();
         $this->assertEquals("John Doe", $human->name);
         $this->assertEquals(-1, $human->age);
-        $this->assertEquals(null, $human->nickname);
+        $this->assertNull($human->nickname);
     }
     public static function setUpBeforeClass() : void
     {
