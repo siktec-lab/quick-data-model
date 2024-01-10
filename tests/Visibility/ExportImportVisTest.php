@@ -38,9 +38,9 @@ class ExportImportVisTest extends TestCase
         $this->assertEquals("Toyota", $data["brand"]);
         $this->assertEquals("Corolla", $data["model"]);
         $this->assertEquals(2010, $car->year);
-        $this->assertNull($data["year"]);
+        $this->assertFalse(array_key_exists("year", $data));
         $this->assertEquals("white", $data["color"]);
-        $this->assertNull($data["code"]);
+        $this->assertFalse(array_key_exists("code", $data));
         $this->assertEquals("123456", $car["code"]); 
         $this->assertEquals("John Doe", $data["owner"]);
     }
