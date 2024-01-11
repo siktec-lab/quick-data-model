@@ -203,6 +203,6 @@ $dealership3->from([ // Import the Car Dealership from an array
 - [ ] Add an optional Trait to make a more advanced `toArrayFilter` method available to the DataModel class this will allow the user to define a custom `toArrayFilter` method for the DataModel.
 - [ ] Add an optional Trait to make a more advanced `fromArrayFilter` method available to the DataModel class this will allow the user to define a custom `fromArrayFilter` method for the DataModel.
 - [ ] When exporting from a Collection to an array the `toArrayFilter` method should be called for each item in the collection.
-- Documentation (WIP)
-- Examples (WIP)
-- Release v1.0.0
+- [ ] Documentation (WIP)
+- [ ] Examples (WIP)
+- [ ] Release v1.0.0
