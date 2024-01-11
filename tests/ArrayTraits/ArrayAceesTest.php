@@ -128,6 +128,67 @@ final class ArrayAceesTest extends TestCase
         $this->assertEquals(6.0, $human["height"]);
         $this->assertNull($human["will_be_ignores"]);
     }
+
+    public function testCollectionArrayAccess() : void
+    {
+        $pool = new Models\CarPool([
+            [
+                "brand"     => "Toyota",
+                "model"     => "Corolla XRS",
+                "year"      => 2020,
+            ],
+            [
+                "brand"     => "Toyota",
+                "model"     => "Corolla Hybrid",
+                "year"      => 2021,
+            ],
+            [
+                "brand"     => "Toyota",
+                "model"     => "Corolla XSE",
+                "year"      => 2019,
+            ]
+        ]);
+
+        $this->assertCount(3, $pool);
+
+        // Change the year of the first car
+        $pool[0]["year"] = 2018;
+        $pool[1]["brand"] = "Honda";
+        $pool[2]["model"] = "Civic";
+        $this->assertEquals(2018, $pool[0]["year"]);
+        $this->assertEquals("Honda", $pool[1]["brand"]);
+        $this->assertEquals("Civic", $pool[2]["model"]);
+
+        // Unset the second car and third car:
+        unset($pool[1]); // This will not reindex the array
+        unset($pool[1]); // This will remove the second car and reindex the array
+
+        $this->assertCount(1, $pool);
+        // Add a new car
+        $pool[] = [
+            "brand"     => "Renault",
+            "model"     => "Clio",
+            "year"      => 2018
+        ];
+
+        // Final
+        $this->assertCount(2, $pool);
+        $this->assertEquals([
+            [
+                "brand"     => "Toyota",
+                "model"     => "Corolla XRS",
+                "color"     => "white",
+                "owner"     => null,
+            ],
+            [
+                "brand"     => "Renault",
+                "model"     => "Clio",
+                "color"     => "white",
+                "owner"     => null,
+            ]
+        ], $pool->toArray());
+    }
+
     public static function setUpBeforeClass() : void
     {
         return;

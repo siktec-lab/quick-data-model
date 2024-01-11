@@ -19,7 +19,7 @@ final class IteratorTest extends TestCase
         return;
     }
 
-    public function testSimpleIterator() : void
+    public function testSimpleDataModelIterator() : void
     {
         $human = new Models\MediumHuman();
         $human->from([
@@ -34,6 +34,30 @@ final class IteratorTest extends TestCase
         }
     }
 
+    public function testSimpleCollectionIterator() : void
+    {
+        $pool = new Models\CarPool([
+            [
+                "brand"     => "Toyota",
+                "model"     => "Corolla XRS",
+                "year"      => 2020,
+            ],
+            [
+                "brand"     => "Toyota",
+                "model"     => "Corolla Hybrid",
+                "year"      => 2021,
+            ],
+            [
+                "brand"     => "Toyota",
+                "model"     => "Corolla XSE",
+                "year"      => 2019,
+            ]
+        ]);
+        $cars = $pool->toArray();
+        foreach ($pool as $index => $car) {
+            $this->assertEquals($cars[$index], $car->toArray());
+        }
+    }
     public static function setUpBeforeClass() : void
     {
         return;

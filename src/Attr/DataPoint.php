@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace QDM;
+namespace QDM\Attr;
 
 use Attribute;
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace QDM\Tests\Models;
 
-use QDM\DataPoint;
+use QDM\Attr;
 use QDM\DataModel;
 use QDM\Traits;
 use ArrayAccess;
@@ -14,11 +14,11 @@ class TwoModel extends DataModel implements ArrayAccess
     use Traits\ArrayAccessTrait;
 
     public function __construct(
-        #[DataPoint(required: true)]
+        #[Attr\DataPoint(required: true)]
         public ?string $name = "two",
-        #[DataPoint(required: true)]
+        #[Attr\DataPoint(required: true)]
         public ?string $value = null,
-        #[DataPoint]
+        #[Attr\DataPoint]
         public ?OneModel $one = null
     ) {
     }

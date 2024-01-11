@@ -70,7 +70,7 @@ class ExportImportVisTest extends TestCase
         $this->assertEquals("white", $car->get("color", export: true));
 
         // Test set method with visibility checks:
-        $done = $car->set("color", "black"); // By default set will not check for import visibility
+        $done = $car->set("black", "color"); // By default set will not check for import visibility
         $this->assertTrue($done);
         $this->assertEquals("black", $car->color);
         $this->assertEquals("black", $car->get("color"));

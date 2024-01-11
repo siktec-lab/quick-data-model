@@ -9,21 +9,32 @@ use ReflectionNamedType;
 use ReflectionUnionType;
 use ReflectionIntersectionType;
 use ReflectionProperty;
-use Stringable;
+use QDM\Attr;
+use QDM\Traits;
+use QDM\Interfaces\IDataModel;
 
-abstract class DataModel implements Stringable
+abstract class DataModel implements IDataModel
 {
+    use Traits\SafeJsonTrait;
+
     protected array $data_point_index = [];
     protected bool $is_initialized = false;
     private array $data_points = [];
 
     /**
-     * DataModel constructor is used to initialize the data points as the current defaults
+     * Create a new data model
+     * You can pass an array, object or json string to initialize the data model
+     * This is the same as calling 'from' on the data model.
      * @throws \Exception if a data points are not public or protected
      */
-    public function __construct()
+    public function __construct(array|string|object $data = [])
     {
+
         $this->initialize(true);
+
+        if (!empty($data)) {
+            $this->from($data);
+        }
     }
 
     /**
@@ -34,7 +45,6 @@ abstract class DataModel implements Stringable
      */
     public function from(object|array|string $data, array &$errors = []) : bool
     {
-
         // Reset the data model:
         $this->revert();
 
@@ -52,14 +62,17 @@ abstract class DataModel implements Stringable
         if (is_array($data)) {
             return $this->fromArray($data, $errors);
         }
-        if (is_object($data) && $data instanceof DataModel) {
+        if (is_object($data) && $data instanceof IDataModel) {
             return $this->fromArray($data->toArray(), $errors);
         }
         if (is_object($data)) {
             return $this->fromArray((array)$data, $errors);
         }
         if (is_string($data)) {
-            return $this->fromArray(json_decode($data, true), $errors);
+            $data = $this->jsonDecodeCatch($data, errors : $errors);
+            if (is_array($data)) {
+                return $this->fromArray($data, $errors);
+            }
         }
         $errors[] = "Data is not a valid type that can be converted to a data model";
 
@@ -119,7 +132,7 @@ abstract class DataModel implements Stringable
      * Set a data point
      * $errors will be filled with any errors that occurred during the initialization
      */
-    public function set(string $name, mixed $value, array &$errors = [], bool $import = false) : bool
+    public function set(mixed $value, string $name, array &$errors = [], bool $import = false) : bool
     {
         // If its not initialized then initialize it:
         if (!$this->is_initialized && !$this->initialize(false)) {
@@ -228,10 +241,11 @@ abstract class DataModel implements Stringable
     /**
      * Convert the data model to a json string
      * pretty will make the json string with indentation
+     * null will be returned if the data model is invalid
      */
-    public function toJson(bool $pretty = false) : string
+    public function toJson(bool $pretty = false) : ?string
     {
-        return json_encode($this->toArray(), $pretty ? JSON_PRETTY_PRINT : 0);
+        return $this->jsonEncodeCatch($this->toArray(), $pretty ? JSON_PRETTY_PRINT : 0);
     }
 
     /**
@@ -273,7 +287,7 @@ abstract class DataModel implements Stringable
             }
             // We set import to true because we are importing from an array
             // and we want to respect the visibility of the data point
-            $this->set($key, $data[$key], $errors, import: true);
+            $this->set($data[$key], $key, $errors, import: true);
         }
 
         return count($errors) == $init_errors;
@@ -290,7 +304,7 @@ abstract class DataModel implements Stringable
         $position = 0;
         $reflection = new ReflectionClass($this);
         foreach ($reflection->getProperties() as $property) {
-            $attributes = $property->getAttributes(DataPoint::class);
+            $attributes = $property->getAttributes(Attr\DataPoint::class);
             if (count($attributes) > 0) {
                 // Basic data point info:
                 $dp = $attributes[0]->newInstance();
@@ -328,7 +342,7 @@ abstract class DataModel implements Stringable
      */
     private static function parseTypes(
         ReflectionNamedType|ReflectionUnionType|ReflectionIntersectionType|null $type,
-        DataPoint $point
+        Attr\DataPoint $point
     ) : void {
         // Null no type assigned:
         if (is_null($type)) {
@@ -360,7 +374,7 @@ abstract class DataModel implements Stringable
 
         // We only support one data model type not multiple:
         foreach ($point->types as $type) {
-            if (is_subclass_of($type, DataModel::class)) {
+            if (is_a($type, IDataModel::class, true)) {
                 $point->is_data_model = true;
                 $point->types = [ $type ];
                 break;
