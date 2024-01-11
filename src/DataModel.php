@@ -215,7 +215,8 @@ abstract class DataModel implements Stringable
 
             // Distinction between data model and other types:
             if ($dp->is_data_model) {
-                $data[$dp->name] = $this->{$dp->name}->toArray();
+                // We only export data if they are not null:
+                $data[$dp->name] = $this->{$dp->name}?->toArray();
             } else {
                 $data[$dp->name] = $this->{$dp->name};
             }
