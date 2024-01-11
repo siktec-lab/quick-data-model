@@ -75,6 +75,71 @@ class NestedDataModelsTest extends TestCase
         ], $car->toArray());
     }
 
+    public function testNullableNestedDataModel() : void
+    {
+
+        // Test nullable:
+        $two = new Models\TwoModel(); // Has a nullable OneModel
+        $status = $two->from([
+            "value" => "two"
+        ]);
+        $this->assertTrue($status);
+        $data = $two->toArray();
+        $this->assertNull($two->one);
+        $this->assertArrayHasKey("one", $data); // Should be in the array
+        $this->assertNull($data["one"]);
+
+        // Same test but with a one intialized:
+        $two = new Models\TwoModel();
+        $status = $two->from([
+            "value" => "V2",
+            "one" => [ "value" => "V1" ]
+        ]);
+        $this->assertTrue($status);
+        $this->assertEquals([
+            "name" => "two",
+            "value" => "V2",
+            "one" => [
+                "name" => "one",
+                "value" => "V1"
+            ]
+        ], $two->toArray());
+    }
+
+    public function testMultipleNestedModels() : void
+    {
+        $three = new Models\ThreeModel();
+        $status = $three->from([
+            "value" => "V3",
+            "one" => [
+                "value" => "V31"
+            ],
+            "two" => [
+                "value" => "V32",
+                "one" => [
+                    "value" => "V321"
+                ]
+            ]
+        ]);
+        $this->assertTrue($status);
+        $this->assertEquals([
+            "name" => "three",
+            "value" => "V3",
+            "one" => [
+                "name" => "one",
+                "value" => "V31"
+            ],
+            "two" => [
+                "name" => "two",
+                "value" => "V32",
+                "one" => [
+                    "name" => "one",
+                    "value" => "V321"
+                ]
+            ]
+        ], $three->toArray());
+    }
+
     public static function setUpBeforeClass() : void
     {
         return;
