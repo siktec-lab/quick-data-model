@@ -286,7 +286,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
             return $this->fromArray($data->toArray(), $errors);
         }
         if (is_string($data)) {
-            $data = $this->jsonDecodeCatch($data, errors : $errors);
+            $data = $this->jsonDecodeCatch($data, assoc: true, errors : $errors);
             if (is_array($data)) {
                 return $this->fromArray($data, $errors);
             }

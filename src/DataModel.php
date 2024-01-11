@@ -69,7 +69,7 @@ abstract class DataModel implements IDataModel
             return $this->fromArray((array)$data, $errors);
         }
         if (is_string($data)) {
-            $data = $this->jsonDecodeCatch($data, errors : $errors);
+            $data = $this->jsonDecodeCatch($data, assoc: true, errors : $errors);
             if (is_array($data)) {
                 return $this->fromArray($data, $errors);
             }
