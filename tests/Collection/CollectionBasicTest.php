@@ -152,6 +152,46 @@ class CollectionBasicTest extends TestCase
         $this->assertEquals("Corolla LE", $pool2->get("three")?->model); // Object syntax
     }
 
+    public function testCollectionOfCollection() : void
+    {
+
+        $multi = new Models\MultipleCarPools();
+        $errors = [];
+        $success = $multi->from([
+            "one" => [
+                [
+                    "brand" => "Renault",
+                    "model" => "Clio",
+                    "year" => 2018
+                ],
+                [
+                    "brand" => "Peugeot",
+                    "model" => "208",
+                    "year" => 2019
+                ]
+            ],
+            "two" => [
+                [
+                    "brand" => "Toyota",
+                    "model" => "Corolla S",
+                    "year" => 2008
+                ],
+                [
+                    "brand" => "Toyota",
+                    "model" => "Corolla XRS",
+                    "year" => 2010
+                ]
+            ],
+        ], $errors);
+
+        $this->assertTrue($success);
+        $this->assertCount(0, $errors);
+        $this->assertEquals(2, $multi->count());
+        $this->assertEquals(2, $multi["one"]->count());
+        $this->assertEquals(2, $multi["two"]->count());
+        $this->assertEquals("Clio", $multi["one"][0]["model"]);
+        $this->assertEquals("Corolla XRS", $multi["two"][1]["model"]);
+    }
     public static function setUpBeforeClass() : void
     {
         return;
