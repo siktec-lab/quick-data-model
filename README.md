@@ -205,4 +205,5 @@ $dealership3->from([ // Import the Car Dealership from an array
 - [ ] When exporting from a Collection to an array the `toArrayFilter` method should be called for each item in the collection.
 - [ ] Documentation (WIP)
 - [ ] Examples (WIP)
-- [ ] Release v1.0.0
+- [ ] **Release v1.0.0**
+- [ ] `Honey Pot` - A special DataPoint that will store any excess data that is not defined in the data model as a key value pair array.
