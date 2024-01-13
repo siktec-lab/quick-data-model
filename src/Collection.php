@@ -19,9 +19,25 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
     use Traits\IteratorTrait;
 
     protected bool $is_initialized  = false;
-    protected array $types          = [];
+
+    /**
+     * @var array<string> The supported types for this collection
+     */
+    protected array $types = [];
+
+    /**
+     * @var array<string|int,QDM\Interfaces\IDataModel> The collection items
+     */
     protected array $items          = [];
+
+    /**
+     * @var bool Should the collection re-index when items are removed
+     */
     protected bool $re_indexing    = true;
+
+    /**
+     * @var Attr\Collect|null The collection attribute
+     */
     private ?Attr\Collect $collect  = null;
 
     /**
@@ -329,7 +345,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
 
     /**
      * Get the collection keys
-     * @return array<string|int>
+     * @return array<mixed>
      */
     public function getKeys() : array
     {
@@ -350,7 +366,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
      *
      * This will convert the collection to an array of arrays while converting the items to arrays
      * recursively.
-     * @return array<string|int, mixed>
+     * @return array<string|int,mixed>
      */
     public function toArray() : array
     {

@@ -193,7 +193,7 @@ $dealership3->from([ // Import the Car Dealership from an array
 - [x] The Collection class should implement the ArrayAccess, Iterator and Countable interfaces also.
 - [x] The Collection Should Type Check the items added to it and be configurable to allow or not allow types.
 - [x] Add more control over how the Collection handles Keys. Especially when adding items to the collection or removing items from the collection.
-- [ ] Add a `filter` option to the DataModel class to normalize the DataPoint values before they are set.
+- [x] Add a `filter` option to the DataModel class to normalize the DataPoint values before they are set.
 - [ ] Add a `"auto"` option to the filter option to automatically normalize the DataPoint values based on the data type.
 - [ ] Add a `"magic"` option to the filter option to automatically normalize the DataPoint if a magic method is defined for the DataPoint. e.g. `filter_set_name` or `filter_get_name`
 - [ ] Add some basic filters that are by default available to the developer. 

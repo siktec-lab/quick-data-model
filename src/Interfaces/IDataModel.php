@@ -31,7 +31,7 @@ interface IDataModel extends Stringable
 
     /**
      * Convert the data model to an array
-     * @return array<string, mixed>
+     * @return array<string|int,mixed>
      */
     public function toArray() : array;
 
