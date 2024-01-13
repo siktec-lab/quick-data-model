@@ -193,13 +193,13 @@ $dealership3->from([ // Import the Car Dealership from an array
 - [x] The Collection class should implement the ArrayAccess, Iterator and Countable interfaces also.
 - [x] The Collection Should Type Check the items added to it and be configurable to allow or not allow types.
 - [x] Add more control over how the Collection handles Keys. Especially when adding items to the collection or removing items from the collection.
-- [x] Add a `filter` option to the DataModel class to normalize the DataPoint values before they are set.
-- [ ] Add a `"auto"` option to the filter option to automatically normalize the DataPoint values based on the data type.
-- [ ] Add a `"magic"` option to the filter option to automatically normalize the DataPoint if a magic method is defined for the DataPoint. e.g. `filter_set_name` or `filter_get_name`
-- [ ] Add some basic filters that are by default available to the developer. 
-- [ ] Add a `setter` option to the DataPoint Attribute to allow the user to define a custom setter method for the DataPoint.
-- [ ] Add a `getter` option to the DataPoint Attribute to allow the user to define a custom getter method for the DataPoint.
-- [ ] Both the `setter` and `getter` options should follow the same rules as the `filter` option ("auto", "magic" or a custom method name).
+- [x] Add a `Filter` attribute to the DataModel class to normalize the DataPoint values before they are set.
+- [ ] Add an option to reference a `Filter` group from DataPoint. This way we can avoid repeating the same filter sequence for multiple DataPoints.
+- [x] Add some basic filters that are by default available to the developer. **With the new filter option this is no longer needed as we can call any function**
+- [ ] Add a `Check` Similar to filter but should return a boolean value. and an optional error message. This is usefull for implementing advanced validation.
+- [ ] Add a `validate()` method to the DataModel class that will run all the `Check` filters and return an array of errors. Although a `Check` is always invoked before setting a value on a DataPoint this method can be used to validate the entire DataModel after it has been initialized and maybe modified by the user.
+- [ ] Add a `Set` Similar to filter this is the very last thing that happens before the value is set so a user can define a custom setter method for the DataPoint maybe its useful for implementing advanced validation or database interaction.
+- [ ] Add a `Get` The very last thing that happens before the value is returned this is applied to any data that is exported from the i.e. `toArray, toJson, get()` methods.
 - [ ] Add an optional Trait to make a more advanced `toArrayFilter` method available to the DataModel class this will allow the user to define a custom `toArrayFilter` method for the DataModel.
 - [ ] Add an optional Trait to make a more advanced `fromArrayFilter` method available to the DataModel class this will allow the user to define a custom `fromArrayFilter` method for the DataModel.
 - [ ] When exporting from a Collection to an array the `toArrayFilter` method should be called for each item in the collection.
