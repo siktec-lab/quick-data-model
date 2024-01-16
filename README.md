@@ -200,11 +200,13 @@ $dealership3->from([ // Import the Car Dealership from an array
 - [ ] Add a `validate()` method to the DataModel class that will run all the `Check` filters and return an array of errors. Although a `Check` is always invoked before setting a value on a DataPoint this method can be used to validate the entire DataModel after it has been initialized and maybe modified by the user.
 - [ ] Add a `Set` Similar to filter this is the very last thing that happens before the value is set so a user can define a custom setter method for the DataPoint maybe its useful for implementing advanced validation or database interaction.
 - [ ] Add a `Get` The very last thing that happens before the value is returned this is applied to any data that is exported from the i.e. `toArray, toJson, get()` methods.
+- [ ] All features (Filter, Check, Set, Get) Can be applied to the entire DataModel or to a specific DataPoint.
+- [x] Add a `describe()` method that will return the parsed data model with all the attributes and their values. useful for debugging especially when using nested data models and references.
 - [ ] Add an optional Trait to make a more advanced `toArrayFilter` method available to the DataModel class this will allow the user to define a custom `toArrayFilter` method for the DataModel.
 - [ ] Add an optional Trait to make a more advanced `fromArrayFilter` method available to the DataModel class this will allow the user to define a custom `fromArrayFilter` method for the DataModel.
 - [ ] When exporting from a Collection to an array the `toArrayFilter` method should be called for each item in the collection.
 - [x] Improve Error|Exception Handling + Tests
 - [ ] Documentation (WIP)
 - [ ] Examples (WIP)
+- [x] `Honey Pot (extra flag)` - A special DataPoint that will store any excess data that is not defined in the data model as a key value pair array.
 - [ ] **Release v1.0.0**
-- [ ] `Honey Pot` - A special DataPoint that will store any excess data that is not defined in the data model as a key value pair array.

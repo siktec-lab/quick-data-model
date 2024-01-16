@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace QDM\Attr;
 
 use Attribute;
+use Exception;
 use ReflectionProperty;
 use ReflectionNamedType;
 use ReflectionUnionType;
@@ -112,6 +113,9 @@ class DataPoint
         }
     }
 
+    /**
+     * Check if the a given value is allowed for this DataPoint
+     */
     final public function isTypeAllowed(mixed &$value) : bool
     {
         if (is_null($value)) {
@@ -120,16 +124,73 @@ class DataPoint
         return $this->hasType(gettype($value));
     }
 
+    /**
+     * Check if the a given type is allowed for this DataPoint
+     */
     final public function hasType(string $type) : bool
     {
         return in_array(self::typeName($type), $this->types);
+    }
+
+    /**
+     * Describe the data point and nested data model if any
+     * @param array<string> $found_nested will be filled with any nested data models found
+     * @return array<string,array|string|null> self descrption dictionary
+     */
+    final public function describe(array &$found_nested = []) : array
+    {
+        $flags = array_filter(
+            [!$this->required ?: "required", 
+             !$this->export ?: "export", 
+             !$this->import ?: "import",
+             !$this->extra ?: "extra"], 
+             fn($f) => is_string($f)
+        );
+        return [
+            "name"   => $this->name,
+            "types"  => implode("|", $this->types),
+            "flags"  => implode(",", $flags),
+            "nested" => $this->describeNested($found_nested)
+    ];
     }
 
     public function __construct(
         public bool $required = false,
         public ?bool $export = null,
         public ?bool $import = null,
-        public ?bool $extra = false // If true this will catch all extra data passed to the data model
+        public bool $extra = false // If true this will catch all extra data passed to the data model
     ) {
+    }
+
+    /**
+     * Describe the nested data model if any
+     * @param array<string> $found_nested used to detect circular references
+     * @return array|string|null self model description or error message
+     */
+    private function describeNested(array &$found_nested) : array|string|null
+    {
+        // Try to describe the nested data model:
+        if ($this->is_data_model && is_a($this->types[0], IDataModel::class, true)) {
+
+            // Make sure we don't have a circular reference:
+            $check = is_array($this->types[0]) ? implode("::", $this->types[0]) : $this->types[0];
+            if (in_array($check, $found_nested)) {
+                return "Circular reference";
+            }
+            $found_nested[] = $check;
+            // Try to describe the nested data model:
+            try {
+                $reflection_class = new \ReflectionClass($this->types[0]);
+                $inst = $reflection_class->newInstanceWithoutConstructor();
+                $init = $inst->initialize();
+                if ($init) {
+                    return $inst->describe($found_nested);
+                }
+            } catch (Exception $e) {
+                ;
+            }
+            return "Cannot describe";
+        }
+        return null;
     }
 }

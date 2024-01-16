@@ -75,6 +75,15 @@ class Filter
     }
 
     /**
+     * Describe the filter
+     * 
+     * return a string representation of the filter definition
+     */
+    final public function describe() : string
+    {
+        return $this->__toString();
+    }
+    /**
      * A filter definition
      *
      * @param string|array<string> $call The callable to be used as a filter
@@ -116,4 +125,36 @@ class Filter
         array_splice($args, $position, 0, [self::VALUE_MARKER]);
         return $args;
     }
+
+    /**
+     * Describe the filter
+     */
+    final public function __toString() : string
+    {
+        $call = is_array($this->call) ? implode("::", $this->call) : $this->call;
+        $args = array_map(
+            function($arg) {
+                if ($arg === self::VALUE_MARKER) {
+                    return "#V";
+                }
+                if (is_numeric($arg) || (is_string($arg) && strlen($arg) <= 15 && !empty(trim($arg)))) { 
+                    return $arg;
+                }
+                if (is_bool($arg)) {
+                    return $arg ? "true" : "false";
+                }
+                return gettype($arg);
+            }, 
+            $this->args
+        );
+        $types = implode("|", $this->types) ?: "mixed";
+        //TODO: maybe its a reference to a data point
+        return sprintf(
+            "%s(%s) -> %s", 
+            $call, 
+            implode(",", $args),
+            $types
+        );
+    }
+
 }

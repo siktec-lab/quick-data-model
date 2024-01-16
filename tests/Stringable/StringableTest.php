@@ -33,6 +33,36 @@ class StringableTest extends TestCase
         );
     }
 
+    public function testModelDebugView() : void
+    {
+        $car = new Models\MediumCar();
+        $status = $car->from([
+            "brand" => "   toyota   ", // A trim + ucfirst an custom filter is applied
+            "model" => "   Corolla   ", // A trim filter is applied
+            "year" => "   2010   ",  // A filter intval is applied
+        ]);
+        $struct = $car->describe();
+        $this->assertTrue($status);
+        $this->assertArrayHasKey("brand", $struct);
+        $this->assertArrayHasKey("model", $struct);
+        $this->assertArrayHasKey("year", $struct);
+        $this->assertArrayHasKey("old_model", $struct);
+        $this->assertNotEmpty($struct["old_model"]);
+
+        // With collections:
+        $carLot = new Models\CarLot();
+        $struct = $carLot->describe();
+
+        print_r($struct);
+
+        $this->assertArrayHasKey("cars", $struct);
+        // Nested cars descrip:
+        $expected = [
+            "name" => "QDM\Collection",
+            "items" => "QDM\Tests\Models\SimpleCar"
+        ];
+        $this->assertEquals($expected, $struct["cars"]["nested"]);
+    }
     public static function setUpBeforeClass() : void
     {
         return;

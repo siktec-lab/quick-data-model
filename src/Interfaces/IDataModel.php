@@ -50,6 +50,13 @@ interface IDataModel extends Stringable
     public function toJson(bool $pretty = false) : ?string;
 
     /**
+     * Describe the data model
+     *
+     * @return array<string,array|string|null> self descrption dictionary
+     */
+    public function describe(array &$found_nested = []) : array;
+
+    /**
      * Convert the data model to a string (json)
      */
     public function __toString() : string;

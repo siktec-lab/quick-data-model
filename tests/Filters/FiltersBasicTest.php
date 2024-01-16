@@ -42,6 +42,26 @@ class FiltersBasicTest extends TestCase
             "old_model" => null,
         ], $data);
     }
+
+    public function testFilterRefFunctions() : void
+    {
+
+        // A medium car:
+        $book = new Models\Books\FilterBookOne();
+        $errors = [];
+        $status = $book->from([
+            "name" => "     harry potter and the philosopher's stone   ",
+            "author" => "   j.k. rowling   ",
+        ], $errors);
+
+        echo PHP_EOL.$book->toJson(true).PHP_EOL;
+
+        $this->assertTrue($status);
+        $this->assertEquals("Harry Potter And The Philosopher's Stone", $book->name);
+        // $this->assertEquals("J.K. Rowling", $book->author);
+
+    }
+
     public static function setUpBeforeClass() : void
     {
         return;
