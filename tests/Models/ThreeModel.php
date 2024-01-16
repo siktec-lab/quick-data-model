@@ -13,6 +13,9 @@ class ThreeModel extends DataModel implements ArrayAccess
 {
     use Traits\ArrayAccessTrait;
 
+    #[Attr\DataPoint(extra: true)]
+    protected array $extra = []; // Should supprot import but not export
+
     public function __construct(
         #[Attr\DataPoint(required: true)]
         public ?string $name = "three",
@@ -21,7 +24,7 @@ class ThreeModel extends DataModel implements ArrayAccess
         #[Attr\DataPoint]
         public ?OneModel $one = null,
         #[Attr\DataPoint]
-        public ?TwoModel $two = null
+        public ?TwoModel $two = null,
     ) {
     }
 }

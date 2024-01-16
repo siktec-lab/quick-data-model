@@ -13,6 +13,9 @@ class OneModel extends DataModel implements ArrayAccess
 {
     use Traits\ArrayAccessTrait;
 
+    #[Attr\DataPoint(extra: true, export: false)]
+    public array $extra = []; // Should supprot import but not export
+
     public function __construct(
         #[Attr\DataPoint(required: true)]
         public ?string $name = "one",

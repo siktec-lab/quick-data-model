@@ -102,7 +102,8 @@ class NestedDataModelsTest extends TestCase
             "one" => [
                 "name" => "one",
                 "value" => "V1"
-            ]
+            ],
+            "extra" => [] // Model has extra data catcher
         ], $two->toArray());
     }
 
@@ -135,7 +136,8 @@ class NestedDataModelsTest extends TestCase
                 "one" => [
                     "name" => "one",
                     "value" => "V321"
-                ]
+                ],
+                "extra" => [] // Model has extra data catcher public so its exported
             ]
         ], $three->toArray());
     }

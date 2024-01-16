@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace QDM\Traits;
 
+use QDM\DataModel;
+
 trait ArrayAccessTrait
 {
     final public function offsetExists(mixed $offset) : bool
     {
-        if ($this instanceof \QDM\DataModel) {
+        if ($this instanceof DataModel) {
             return is_string($offset) ?
                 $this->has($offset, export : false) && !is_null($this->{$offset}) :
                 false;
@@ -19,7 +21,7 @@ trait ArrayAccessTrait
 
     final public function offsetGet(mixed $offset) : mixed
     {
-        if ($this instanceof \QDM\DataModel) {
+        if ($this instanceof DataModel) {
             return is_string($offset) ? $this->get($offset, export : false) : null;
         }
         // Its a collection:
@@ -28,7 +30,7 @@ trait ArrayAccessTrait
 
     final public function offsetSet(mixed $offset, mixed $value) : void
     {
-        if ($this instanceof \QDM\DataModel) {
+        if ($this instanceof DataModel) {
             if (is_string($offset)) {
                 $this->set($value, $offset, import : false);
             }
@@ -42,7 +44,7 @@ trait ArrayAccessTrait
 
     final public function offsetUnset(mixed $offset) : void
     {
-        if ($this instanceof \QDM\DataModel) {
+        if ($this instanceof DataModel) {
             if (is_string($offset)) {
                 $this->revert($offset);
             }

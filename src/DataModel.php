@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace QDM;
 
 use ReflectionClass;
-use QDM\Attr\DataPoint;
+use Exception;
 use QDM\Traits;
 use QDM\Interfaces\IDataModel;
 
@@ -18,28 +18,12 @@ abstract class DataModel implements IDataModel
     protected bool $is_initialized = false;
 
     /**
-     * Create a new data model
-     * You can pass an array, object or json string to initialize the data model
-     * This is the same as calling 'from' on the data model.
-     * @throws \Exception if a data points are not public or protected
-     */
-    public function __construct(array|string|object $data = [])
-    {
-
-        $this->initialize(true);
-
-        if (!empty($data)) {
-            $this->from($data);
-        }
-    }
-
-    /**
      * Populate the data model from an object, array or json string
      * each call to from will revert the data model to its default values
      * $errors will be filled with any errors that occurred during the initialization
      * Will return true if no errors occurred
      */
-    public function from(object|array|string $data, array &$errors = []) : bool
+    final public function from(object|array|string $data, array &$errors = []) : bool
     {
         // Reset the data model:
         $this->revert();
@@ -53,7 +37,7 @@ abstract class DataModel implements IDataModel
      * $errors will be filled with any errors that occurred during the initialization
      * Will return true if no errors occurred
      */
-    public function extend(object|array|string $data, array &$errors = []) : bool
+    final public function extend(object|array|string $data, array &$errors = []) : bool
     {
         if (is_array($data)) {
             return $this->fromArray($data, $errors);
@@ -79,7 +63,7 @@ abstract class DataModel implements IDataModel
      * Revert the data model to its default values from latest initialization
      * if no data points are passed it will revert all data points
      */
-    public function revert(...$datapoints) : void
+    final public function revert(...$datapoints) : void
     {
         // Nothing to revert to...
         if (!$this->is_initialized) {
@@ -99,7 +83,7 @@ abstract class DataModel implements IDataModel
     /**
      * Check if a data point exists
      */
-    public function has(string $name, bool $export = false, bool $import = false) : bool
+    final public function has(string $name, bool $export = false, bool $import = false) : bool
     {
         $dp = $this->getDataPoint($name);
         if (is_null($dp)) {
@@ -117,13 +101,130 @@ abstract class DataModel implements IDataModel
     /**
      * Get a data point value
      */
-    public function get(string $name, bool $export = false) : mixed
+    final public function get(string $name, bool $export = false) : mixed
     {
         $dp = $this->getDataPoint($name);
         if (is_null($dp)) {
             return null;
         }
         return !$export ? $this->{$name} : ($dp->export ? $this->{$name} : null);
+    }
+
+    /**
+     * Convert the data model to an array
+     * @return array<string,mixed>
+     */
+    final public function toArray() : array
+    {
+        // If its not initialized then initialize it:
+        if (!$this->is_initialized && !$this->initialize(false)) {
+            return [];
+        }
+
+        // Build the array:
+        $data = [];
+        foreach ($this->data_points as $dp) {
+            // We don't use get for performance reasons:
+            // get will check if the data point exists and then get it
+            // we already know it exists so we just get it
+            if (!$dp->export) {
+                continue;
+            }
+
+            // Distinction between data model and other types:
+            if ($dp->is_data_model) {
+                // We only export data if they are not null:
+                $data[$dp->name] = $this->{$dp->name}?->toArray();
+            } else {
+                $data[$dp->name] = $this->{$dp->name};
+            }
+        }
+
+        // Add extra data only if its set to export:
+        if ($this->extra_data && $this->extra_data->export) {
+            $data[$this->extra_data->name] = $this->{$this->extra_data->name};
+        }
+
+        return $data;
+    }
+
+    /**
+     * Convert the data model to a json string
+     * pretty will make the json string with indentation
+     * null will be returned if the data model is invalid
+     */
+    final public function toJson(bool $pretty = false) : ?string
+    {
+        return $this->jsonEncodeCatch($this->toArray(), $pretty ? JSON_PRETTY_PRINT : 0);
+    }
+
+    /**
+     * Initialize the data model
+     * This will initialize the data points and set the default values
+     * @throws DataModelException if the a DataPoint declaration is invalid
+     */
+    final public function initialize(bool $throw = true) : bool
+    {
+        try {
+            $this->parseAttributes();
+            $this->is_initialized = true;
+        } catch (DataModelException $e) {
+            if ($throw) {
+                throw $e;
+            }
+            return false;
+        } catch (Exception $e) {
+            if ($throw) {
+                throw new DataModelException(DataModelException::CODE_UNKNOWN_ERROR, [$e->getMessage()], $e);
+            }
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Populate the data model from an array
+     * $errors will be filled with any errors that occurred during the initialization
+     * Will return true if no errors occurred
+     */
+    final protected function fromArray(array $data, array &$errors = []) : bool
+    {
+        // If its not initialized then initialize it:
+        if (!$this->is_initialized && !$this->initialize(false)) {
+            $errors[] = "Data model could not be initialized declaration error";
+            return false;
+        }
+        $init_errors = count($errors);
+
+        $dps = $this->getDataPointsNames();
+        // Loop through the data:
+        foreach ($data as $key => $value) {
+            if (!in_array($key, $dps)) {
+                // We call this manually because we want to avoid unnecessary checks and errors:
+                $this->saveExtra($key, $value, import: true);
+                continue;
+            }
+            $this->set($value, $key, $errors, import: true);
+        }
+
+        return count($errors) == $init_errors;
+    }
+
+    /**
+     * Create a new data model
+     * You can pass an array, object or json string to initialize the data model
+     * This is the same as calling 'from' on the data model.
+     *
+     * @throws DataModelException if the a DataPoint declaration is invalid
+     */
+    public function __construct(array|string|object $data = [])
+    {
+
+        $this->initialize(true);
+
+        if (!empty($data)) {
+            $this->from($data);
+        }
     }
 
     /**
@@ -138,10 +239,16 @@ abstract class DataModel implements IDataModel
             return false;
         }
 
+        // Get the data point:
         $dp = $this->getDataPoint($name);
         if (is_null($dp)) {
-            $errors[] = "Data point '{$name}' does not exist";
-            return false;
+            // If its an extra data point then save it:
+            if (!$this->saveExtra($name, $value, $import)) {
+                $errors[] = "Data point '{$name}' does not exist";
+                return false;
+            }
+            // We saved it so we are done:
+            return true;
         }
 
         // Should we import this data point:
@@ -170,7 +277,6 @@ abstract class DataModel implements IDataModel
                 $errors[] = "Data point '{$name}' must be an array, object or string";
                 return false;
             }
-
             // Build the data model:
             $dm = new $dp->types[0]();
             if (!$dm->from($value, $errors)) {
@@ -181,15 +287,12 @@ abstract class DataModel implements IDataModel
         }
 
         // Type check:
-        if (
-            !in_array($my_type = DataPoint::typeName(gettype($value)), $dp->types) &&
-            !(is_null($value) && $dp->nullable)
-        ) {
+        if (!$dp->isTypeAllowed($value)) {
             $errors[] =  sprintf(
                 "DataPoint '%s' must be of type '%s' -> Got '%s'",
                 $name,
                 implode("|", $dp->types),
-                $my_type
+                gettype($value)
             );
             return false;
         }
@@ -200,97 +303,9 @@ abstract class DataModel implements IDataModel
     }
 
     /**
-     * Convert the data model to an array
-     * @return array<string,mixed>
-     */
-    public function toArray() : array
-    {
-        // If its not initialized then initialize it:
-        if (!$this->is_initialized && !$this->initialize(false)) {
-            return [];
-        }
-
-        // Build the array:
-        $data = [];
-        foreach ($this->data_points as $dp) {
-            // We don't use get for performance reasons:
-            // get will check if the data point exists and then get it
-            // we already know it exists so we just get it
-            if (!$dp->export) {
-                continue;
-            }
-
-            // Distinction between data model and other types:
-            if ($dp->is_data_model) {
-                // We only export data if they are not null:
-                $data[$dp->name] = $this->{$dp->name}?->toArray();
-            } else {
-                $data[$dp->name] = $this->{$dp->name};
-            }
-        }
-
-        return $data;
-    }
-
-    /**
-     * Convert the data model to a json string
-     * pretty will make the json string with indentation
-     * null will be returned if the data model is invalid
-     */
-    public function toJson(bool $pretty = false) : ?string
-    {
-        return $this->jsonEncodeCatch($this->toArray(), $pretty ? JSON_PRETTY_PRINT : 0);
-    }
-
-    /**
-     * Initialize the data model
-     * This will initialize the data points and set the default values
-     * @throws \Exception if a data point is not public or protected unless throw is false
-     */
-    protected function initialize(bool $throw = true) : bool
-    {
-        try {
-            $this->parseAttributes();
-            $this->is_initialized = true;
-        } catch (\Exception $e) {
-            if ($throw) {
-                throw $e;
-            }
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Populate the data model from an array
-     * $errors will be filled with any errors that occurred during the initialization
-     * Will return true if no errors occurred
-     */
-    protected function fromArray(array $data, array &$errors = []) : bool
-    {
-        // If its not initialized then initialize it:
-        if (!$this->is_initialized && !$this->initialize(false)) {
-            $errors[] = "Data model could not be initialized declaration error";
-            return false;
-        }
-        $init_errors = count($errors);
-        $keys = array_keys($data);
-        foreach ($this->getDataPointsNames() as $dp_name) {
-            if (!in_array($dp_name, $keys)) {
-                continue;
-            }
-            // We set import to true because we are importing from an array
-            // and we want to respect the visibility of the data point
-            $this->set($data[$dp_name], $dp_name, $errors, import: true);
-        }
-
-        return count($errors) == $init_errors;
-    }
-
-    /**
      * Get the data points of the data model
      *
-     * @throws \Exception if a data point is not public or protected
+     * @throws DataModelException if the a DataPoint declaration is invalid
      */
     private function parseAttributes() : void
     {

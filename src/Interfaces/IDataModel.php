@@ -9,6 +9,13 @@ use Stringable;
 interface IDataModel extends Stringable
 {
     /**
+     * Initialize the data model
+     * Most of the time this will be called from the constructor
+     * Or automatically when the data model is set, from or extend is called
+     */
+    public function initialize(bool $throw = true) : bool;
+
+    /**
      * Populate the data model from an object, array or json string
      * each call to from will revert the data model to its default values
      * $errors will be filled with any errors that occurred during the initialization

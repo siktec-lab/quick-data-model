@@ -112,10 +112,24 @@ class DataPoint
         }
     }
 
+    final public function isTypeAllowed(mixed &$value) : bool
+    {
+        if (is_null($value)) {
+            return $this->nullable;
+        }
+        return $this->hasType(gettype($value));
+    }
+
+    final public function hasType(string $type) : bool
+    {
+        return in_array(self::typeName($type), $this->types);
+    }
+
     public function __construct(
         public bool $required = false,
         public ?bool $export = null,
-        public ?bool $import = null
+        public ?bool $import = null,
+        public ?bool $extra = false // If true this will catch all extra data passed to the data model
     ) {
     }
 }

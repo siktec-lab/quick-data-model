@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace QDM\Traits;
 
+use QDM\DataModelException;
+
 trait SafeJsonTrait
 {
     public function jsonDecode(string $json, bool $assoc = false, int $depth = 512, int $options = 0) : mixed
     {
         $decoded = json_decode($json, $assoc, $depth, $options);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \Exception(json_last_error_msg());
+            throw new DataModelException(DataModelException::CODE_JSON_SERIALIZE_ERROR, [json_last_error_msg()]);
         }
         return $decoded;
     }
@@ -19,7 +21,7 @@ trait SafeJsonTrait
     {
         $encoded = json_encode($value, $options, $depth);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \Exception(json_last_error_msg());
+            throw new DataModelException(DataModelException::CODE_JSON_SERIALIZE_ERROR, [json_last_error_msg()]);
         }
         return $encoded;
     }
@@ -33,7 +35,7 @@ trait SafeJsonTrait
     ) : mixed {
         try {
             return $this->jsonDecode($json, $assoc, $depth, $options);
-        } catch (\Exception $e) {
+        } catch (DataModelException $e) {
             $errors[] = $e->getMessage();
             return null;
         }
@@ -47,7 +49,7 @@ trait SafeJsonTrait
     ) : ?string {
         try {
             return $this->jsonEncode($value, $options, $depth);
-        } catch (\Exception $e) {
+        } catch (DataModelException $e) {
             $errors[] = $e->getMessage();
             return null;
         }

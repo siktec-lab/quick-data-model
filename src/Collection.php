@@ -8,6 +8,7 @@ use ArrayAccess;
 use Countable;
 use Iterator;
 use ReflectionClass;
+use Exception;
 use QDM\Attr;
 use QDM\Traits;
 use QDM\Interfaces\IDataModel;
@@ -212,20 +213,150 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
      * Initialize the collection
      *
      * Will initialize the collection and populate the types it supports
-     * @throws \Exception if the collection is not defined properly
+     * @throws DataModelException if the collection is not defined properly
      */
-    final protected function initialize(bool $throw = true) : bool
+    final public function initialize(bool $throw = true) : bool
     {
         try {
             $this->defineCollection();
             $this->is_initialized = true;
-        } catch (\Exception $e) {
+        } catch (DataModelException $e) {
             if ($throw) {
                 throw $e;
             }
             return false;
+        } catch (Exception $e) {
+            if ($throw) {
+                throw new DataModelException(DataModelException::CODE_UNKNOWN_ERROR, [$e->getMessage()], $e);
+            }
+            return false;
         }
         return true;
+    }
+
+    /**
+     * Populate the collection from an object, array or json string
+     *
+     * This will clear the collection and populate it with the new data
+     * Only Collection can populate a collection. If you want to add a single item use the 'add' method
+     * or if you want to set a single item use the 'set' method.
+     */
+    final public function from(object|array|string $data, array &$errors = []) : bool
+    {
+        // Reset the data model:
+        $this->clear();
+        // Now extend the data model:
+        return $this->extend($data, $errors);
+    }
+
+    /**
+     * Extend the collection from an object, array or json string
+     *
+     * Only a Collection can extend a collection. If you want to add a single item use the 'add' method
+     * or if you want to set a single item use the 'set' method.
+     */
+    final public function extend(object|array|string $data, array &$errors = []) : bool
+    {
+        if (is_array($data)) {
+            return $this->fromArray($data, $errors);
+        }
+        if ($data instanceof Collection) {
+            // We want to loop through the items and set them:
+            foreach ($data as $key => $item) {
+                $this->set($item, $key, $errors, true);
+            }
+            return $this->fromArray($data->toArray(), $errors);
+        }
+        if (is_string($data)) {
+            $data = $this->jsonDecodeCatch($data, assoc: true, errors : $errors);
+            if (is_array($data)) {
+                return $this->fromArray($data, $errors);
+            }
+        }
+        $errors[] = "Data is not a valid type that can be used to extend the collection";
+        return false;
+    }
+
+    /**
+     * Remove elements from the collection. If no keys are passed it will clear the entire collection
+     *
+     * This method is also used by the ArrayAccessTrait unset method.
+     * If the collection is a list then the keys will be re-indexed. If you do not want this behavior
+     * you can disable it by calling the autoReIndexing method.
+     */
+    final public function clear(...$keys) : void
+    {
+        $keys = empty($keys) ? array_keys($this->items) : $keys;
+        $removed = false;
+        $is_list = array_is_list($this->items);
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $this->items)) {
+                unset($this->items[$key]);
+                $removed = true;
+            }
+        }
+        // If its a list then we need to reindex the array:
+        if ($this->re_indexing && $is_list && $removed) {
+            $this->convertToList();
+        }
+    }
+
+    /**
+     * Get a Collection item by key name
+     */
+    final public function get(string|int $name) : IDataModel|null
+    {
+        return $this->items[$name] ?? null;
+    }
+
+    /**
+     * Get the collection keys
+     * @return array<mixed>
+     */
+    final public function getKeys() : array
+    {
+        return array_keys($this->items);
+    }
+
+    /**
+     * Get the collection underlying values
+     * @return array<QDM\Interfaces\IDataModel>
+     */
+    final public function getValues() : array
+    {
+        return array_values($this->items);
+    }
+
+    /**
+     * Convert the collection to an array
+     *
+     * This will convert the collection to an array of arrays while converting the items to arrays
+     * recursively.
+     * @return array<string|int,mixed>
+     */
+    final public function toArray() : array
+    {
+        // If its not initialized then initialize it:
+        if (!$this->is_initialized && !$this->initialize(false)) {
+            return [];
+        }
+        // Build the array:
+        $data = [];
+        foreach ($this->items as $key => $value) {
+            $data[$key] = $value->toArray();
+        }
+        return $data;
+    }
+
+    /**
+     * Convert the collection to a json string
+     *
+     * pretty will make the json string with indentation
+     * null will be returned if the collection is invalid
+     */
+    final public function toJson(bool $pretty = false) : ?string
+    {
+        return $this->jsonEncodeCatch($this->toArray(), $pretty ? JSON_PRETTY_PRINT : 0);
     }
 
     /**
@@ -258,7 +389,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
      * You can pass an array, object or json string to populate the collection
      * This is the same as calling 'from' on the collection
      *
-     * @throws \Exception if the collection is not defined properly
+     * @throws DataModelException if the collection is not defined properly
      */
     public function __construct(array|string|object $data = [])
     {
@@ -269,134 +400,9 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
     }
 
     /**
-     * Populate the collection from an object, array or json string
-     *
-     * This will clear the collection and populate it with the new data
-     * Only Collection can populate a collection. If you want to add a single item use the 'add' method
-     * or if you want to set a single item use the 'set' method.
-     */
-    public function from(object|array|string $data, array &$errors = []) : bool
-    {
-        // Reset the data model:
-        $this->clear();
-        // Now extend the data model:
-        return $this->extend($data, $errors);
-    }
-
-    /**
-     * Extend the collection from an object, array or json string
-     *
-     * Only a Collection can extend a collection. If you want to add a single item use the 'add' method
-     * or if you want to set a single item use the 'set' method.
-     */
-    public function extend(object|array|string $data, array &$errors = []) : bool
-    {
-        if (is_array($data)) {
-            return $this->fromArray($data, $errors);
-        }
-        if ($data instanceof Collection) {
-            // We want to loop through the items and set them:
-            foreach ($data as $key => $item) {
-                $this->set($item, $key, $errors, true);
-            }
-            return $this->fromArray($data->toArray(), $errors);
-        }
-        if (is_string($data)) {
-            $data = $this->jsonDecodeCatch($data, assoc: true, errors : $errors);
-            if (is_array($data)) {
-                return $this->fromArray($data, $errors);
-            }
-        }
-        $errors[] = "Data is not a valid type that can be used to extend the collection";
-        return false;
-    }
-
-    /**
-     * Remove elements from the collection. If no keys are passed it will clear the entire collection
-     *
-     * This method is also used by the ArrayAccessTrait unset method.
-     * If the collection is a list then the keys will be re-indexed. If you do not want this behavior
-     * you can disable it by calling the autoReIndexing method.
-     */
-    public function clear(...$keys) : void
-    {
-        $keys = empty($keys) ? array_keys($this->items) : $keys;
-        $removed = false;
-        $is_list = array_is_list($this->items);
-        foreach ($keys as $key) {
-            if (array_key_exists($key, $this->items)) {
-                unset($this->items[$key]);
-                $removed = true;
-            }
-        }
-        // If its a list then we need to reindex the array:
-        if ($this->re_indexing && $is_list && $removed) {
-            $this->convertToList();
-        }
-    }
-
-    /**
-     * Get a Collection item by key name
-     */
-    public function get(string|int $name) : IDataModel|null
-    {
-        return $this->items[$name] ?? null;
-    }
-
-    /**
-     * Get the collection keys
-     * @return array<mixed>
-     */
-    public function getKeys() : array
-    {
-        return array_keys($this->items);
-    }
-
-    /**
-     * Get the collection underlying values
-     * @return array<QDM\Interfaces\IDataModel>
-     */
-    public function getValues() : array
-    {
-        return array_values($this->items);
-    }
-
-    /**
-     * Convert the collection to an array
-     *
-     * This will convert the collection to an array of arrays while converting the items to arrays
-     * recursively.
-     * @return array<string|int,mixed>
-     */
-    public function toArray() : array
-    {
-        // If its not initialized then initialize it:
-        if (!$this->is_initialized && !$this->initialize(false)) {
-            return [];
-        }
-        // Build the array:
-        $data = [];
-        foreach ($this->items as $key => $value) {
-            $data[$key] = $value->toArray();
-        }
-        return $data;
-    }
-
-    /**
-     * Convert the collection to a json string
-     *
-     * pretty will make the json string with indentation
-     * null will be returned if the collection is invalid
-     */
-    public function toJson(bool $pretty = false) : ?string
-    {
-        return $this->jsonEncodeCatch($this->toArray(), $pretty ? JSON_PRETTY_PRINT : 0);
-    }
-
-    /**
      * Determine which type of collection this is
      *
-     * @throws \Exception if the collection is not defined properly
+     * @throws DataModelException if the collection is not defined properly
      */
     private function defineCollection() : void
     {
@@ -417,7 +423,10 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
         // Validate types are all IDataModel
         foreach ($this->types as $type) {
             if (!is_subclass_of($type, IDataModel::class)) {
-                throw new \Exception("Collection type must implement IDataModel");
+                throw new DataModelException(
+                    DataModelException::CODE_COLLECTION_TYPES,
+                    [$type]
+                );
             }
         }
     }
@@ -442,7 +451,6 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
      * Populate a specific data model from an object, array or json string
      *
      * This assumes the type is valid and will not perform any checks.
-     * @throws \Exception if the data model could not be built
      */
     private function buildItem(string $type, array|string|IDataModel $item, array &$errors = []) : ?IDataModel
     {
@@ -451,7 +459,10 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
             $instance = $reflection->newInstance();
             $status = $instance->from($item, $errors);
             return $status ? $instance : null;
-        } catch (\Exception $e) {
+        } catch (DataModelException $e) {
+            $errors[] = "Could not build item: " . $e->getMessage();
+            return null;
+        } catch (Exception $e) {
             $errors[] = "Could not build item: " . $e->getMessage();
             return null;
         }

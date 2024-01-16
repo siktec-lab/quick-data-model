@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace QDM\Traits;
 
+use QDM\DataModel;
+
 trait IteratorTrait
 {
     private int $position = 0;
 
     final public function current() : mixed
     {
-        if ($this instanceof \QDM\DataModel) {
+        if ($this instanceof DataModel) {
             return $this->get($this->data_point_index[$this->position]);
         }
         // Its a collection:
@@ -19,7 +21,7 @@ trait IteratorTrait
 
     final public function key() : mixed
     {
-        if ($this instanceof \QDM\DataModel) {
+        if ($this instanceof DataModel) {
             return $this->data_point_index[$this->position];
         }
         return key($this->items);
@@ -27,7 +29,7 @@ trait IteratorTrait
 
     final public function next() : void
     {
-        if ($this instanceof \QDM\DataModel) {
+        if ($this instanceof DataModel) {
             ++$this->position;
             return;
         }
@@ -37,7 +39,7 @@ trait IteratorTrait
 
     final public function rewind() : void
     {
-        if ($this instanceof \QDM\DataModel) {
+        if ($this instanceof DataModel) {
             $this->position = 0;
             return;
         }
@@ -47,7 +49,7 @@ trait IteratorTrait
 
     final public function valid() : bool
     {
-        if ($this instanceof \QDM\DataModel) {
+        if ($this instanceof DataModel) {
             return isset($this->data_point_index[$this->position]);
         }
         // Its a collection: we use array_key_exists instead of isset

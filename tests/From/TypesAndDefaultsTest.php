@@ -117,6 +117,38 @@ final class TypesAndDefaultsTest extends TestCase
         $this->assertEquals(6.0, $human->height);
     }
 
+    public function testExtraCatcherWithFrom() : void
+    {
+        $human = new Models\TwoModel();
+        $errors = [];
+        $status = $human->from([
+            "name" => "two",
+            "value" => "two",
+            "catch1" => "test",
+            "catch2" => true,
+            "catch3" => 1,
+            "catch4" => 1.0,
+            "catch5" => [1, 2, 3],
+        ], $errors);
+
+        $this->assertTrue($status);
+        $this->assertCount(0, $errors);
+
+        $export = $human->toArray();
+        $this->assertEquals([
+            "name" => "two",
+            "value" => "two",
+            "one" => null,
+            "extra" => [
+                "catch1" => "test",
+                "catch2" => true,
+                "catch3" => 1,
+                "catch4" => 1.0,
+                "catch5" => [1, 2, 3],
+            ],
+        ], $export);
+    }
+
     public static function setUpBeforeClass() : void
     {
         return;

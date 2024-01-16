@@ -5,12 +5,74 @@ declare(strict_types=1);
 namespace QDM\Attr;
 
 use Attribute;
+use Throwable;
 use QDM\Attr\DataPoint;
 
 #[Attribute(Attribute::TARGET_PROPERTY | Attribute::IS_REPEATABLE)]
 class Filter
 {
     public const VALUE_MARKER = "!VALUE!";
+
+    /**
+     * Check if a callable is valid and return the full callable
+     *
+     * @param string|array<string> $callable
+     */
+    final public static function isCallable(array|string $callable) : string|bool
+    {
+        $call_filter = $callable;
+        return is_callable($callable, false, $call_filter) ? $call_filter : false;
+    }
+
+    /**
+     * Replaces the special value marker with the given value inside the args array
+     *
+     * @return array<mixed>
+     */
+    final public static function applyValueToArgs(mixed $value, array $args) : array
+    {
+        return array_map(
+            fn($arg) => $arg === self::VALUE_MARKER ? $value : $arg,
+            $args
+        );
+    }
+
+    /**
+     * Execute a filter
+     *
+     * @return array{bool,string} Exec success status and the value or error message
+     */
+    final public static function execFilter(mixed $callable, array $args, array|string $types) : array
+    {
+        try {
+            $value = call_user_func_array($callable, $args);
+            $type = DataPoint::typeName(gettype($value));
+            $valid = empty($types) || in_array(
+                $type,
+                is_string($types) ? self::typesFromString($types) : $types
+            );
+            return [
+                $valid,
+                $valid ? $value : "Invalid return type {$type}' from filter"
+            ];
+        } catch (Throwable $th) {
+            return [false, "Filter failed with error '{$th->getMessage()}'"];
+        }
+    }
+
+    /**
+     * Convert a string of types to an array of types
+     * e.g. "int|string" -> [ "int", "string" ]
+     *
+     * @return array<string>
+     */
+    final public static function typesFromString(string $types) : array
+    {
+        return array_filter(
+            explode("|", $types),
+            fn($type) => !empty(trim($type))
+        );
+    }
 
     /**
      * A filter definition
@@ -39,67 +101,6 @@ class Filter
                 $this->types
             );
         }
-    }
-
-    /**
-     * Check if a callable is valid and return the full callable
-     *
-     * @param string|array<string> $callable
-     */
-    public static function isCallable(array|string $callable) : string|bool
-    {
-        $call_filter = $callable;
-        return is_callable($callable, false, $call_filter) ? $call_filter : false;
-    }
-
-    /**
-     * Replaces the special value marker with the given value inside the args array
-     *
-     * @return array<mixed>
-     */
-    public static function applyValueToArgs(mixed $value, array $args) : array
-    {
-        return array_map(
-            fn($arg) => $arg === self::VALUE_MARKER ? $value : $arg,
-            $args
-        );
-    }
-
-    /**
-     * Execute a filter
-     *
-     * @return array{bool,string} Exec success status and the value or error message
-     */
-    public static function execFilter(mixed $callable, array $args, array|string $types) : array
-    {
-        try {
-            $value = call_user_func_array($callable, $args);
-            $type = DataPoint::typeName(gettype($value));
-            $valid = empty($types) || in_array(
-                $type,
-                is_string($types) ? self::typesFromString($types) : $types
-            );
-            return [
-                $valid,
-                $valid ? $value : "Invalid return type {$type}' from filter"
-            ];
-        } catch (\Throwable $th) {
-            return [false, "Filter failed with error '{$th->getMessage()}'"];
-        }
-    }
-
-    /**
-     * Convert a string of types to an array of types
-     * e.g. "int|string" -> [ "int", "string" ]
-     *
-     * @return array<string>
-     */
-    public static function typesFromString(string $types) : array
-    {
-        return array_filter(
-            explode("|", $types),
-            fn($type) => !empty(trim($type))
-        );
     }
 
     /**
