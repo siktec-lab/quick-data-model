@@ -16,7 +16,7 @@ class MediumCar extends DataModel implements ArrayAccess
     #[Attr\DataPoint(required: true)]
     #[Attr\Filter("trim"),
       Attr\Filter("ucfirst"),
-      Attr\Filter([MediumCar::class, "myFilter"], value_pos : 0, args : [10])
+      Attr\Filter([MediumCar::class, "myFilter"], args : [10], value_pos : 0)
     ]
     public ?string $brand = null;
 

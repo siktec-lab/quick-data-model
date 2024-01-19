@@ -6,6 +6,7 @@ namespace QDM;
 
 use ReflectionClass;
 use Exception;
+use QDM\Attr;
 use QDM\Traits;
 use QDM\Interfaces\IDataModel;
 
@@ -14,6 +15,7 @@ abstract class DataModel implements IDataModel
     use Traits\SafeJsonTrait;
     use Traits\DataPointsTrait;
     use Traits\FiltersTrait;
+    use Traits\ChecksTrait;
 
     protected bool $is_initialized = false;
 
@@ -123,7 +125,7 @@ abstract class DataModel implements IDataModel
 
         // Build the array:
         $data = [];
-        foreach ($this->data_points as $dp) {
+        foreach ($this->qdm_data_points as $dp) {
             // We don't use get for performance reasons:
             // get will check if the data point exists and then get it
             // we already know it exists so we just get it
@@ -141,8 +143,8 @@ abstract class DataModel implements IDataModel
         }
 
         // Add extra data only if its set to export:
-        if ($this->extra_data && $this->extra_data->export) {
-            $data[$this->extra_data->name] = $this->{$this->extra_data->name};
+        if ($this->qdm_extra_data && $this->qdm_extra_data->export) {
+            $data[$this->qdm_extra_data->name] = $this->{$this->qdm_extra_data->name};
         }
 
         return $data;
@@ -195,8 +197,9 @@ abstract class DataModel implements IDataModel
         }
 
         $struct = [];
-        foreach ($this->data_points as $dp) {
-            $filters = array_map(fn($f) => $f->describe(), $this->getFilters($dp->name));
+        foreach ($this->qdm_data_points as $dp) {
+            $filters = array_map(fn($f) => $f->describe(), $this->qdmGetFilters($dp->name));
+            $checks = array_map(fn($c) => $c->describe(), $this->qdmGetChecks($dp->name));
             $struct[$dp->name] = array_merge(
                 $dp->describe($found_nested),
                 [
@@ -231,7 +234,7 @@ abstract class DataModel implements IDataModel
         foreach ($data as $key => $value) {
             if (!in_array($key, $dps)) {
                 // We call this manually because we want to avoid unnecessary checks and errors:
-                $this->saveExtra($key, $value, import: true);
+                $this->saveExtraValue($key, $value, import: true);
                 continue;
             }
             $this->set($value, $key, $errors, import: true);
@@ -273,7 +276,7 @@ abstract class DataModel implements IDataModel
         $dp = $this->getDataPoint($name);
         if (is_null($dp)) {
             // If its an extra data point then save it:
-            if (!$this->saveExtra($name, $value, $import)) {
+            if (!$this->saveExtraValue($name, $value, $import)) {
                 $errors[] = "Data point '{$name}' does not exist";
                 return false;
             }
@@ -288,8 +291,8 @@ abstract class DataModel implements IDataModel
 
         // Apply the custom filter if any:
         if (
-            $this->hasFilters($dp->name) &&
-            !self::applyFilters($value, $this->getFilters($dp->name), $errors)
+            $this->qdmHasFilters($dp->name) &&
+            !Attr\Filter::applyFilters($value, $this->qdmGetFilters($dp->name), $errors)
         ) {
             return false;
         }
@@ -345,7 +348,7 @@ abstract class DataModel implements IDataModel
             // Data point:
             if ($this->buildDataPoint($property, $property_position)) {
                 // Parse the filters for the data point:
-                $this->buildFilters($property);
+                $this->qdmBuildFilters($property);
                 // Next DataPoint:
                 $property_position++;
             }

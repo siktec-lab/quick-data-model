@@ -209,4 +209,22 @@ abstract class ReferableDataModelAttr extends BaseAttr
         array_splice($args, $position, 0, [self::VALUE_MARKER]);
         return $args;
     }
+
+    final protected static function argStringable(mixed $arg) : string
+    {
+        return match (true) {
+            $arg === self::VALUE_MARKER => "#V",
+            is_numeric($arg) || (is_string($arg) && strlen($arg) <= 15 && !empty(trim($arg))) => 
+                is_string($arg)
+                    ? str_replace(
+                        [ "\n", "\r", "\t", "\v", "\f" ],
+                        [ '\n', '\r', '\t', '\v', '\f' ],
+                        $arg
+                    )
+                    : (string)$arg,
+            is_bool($arg) => $arg ? "true" : "false",
+            is_object($arg) => get_class($arg),
+            default => gettype($arg),
+        };
+    }
 }

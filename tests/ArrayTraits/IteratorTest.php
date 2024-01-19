@@ -29,8 +29,8 @@ final class IteratorTest extends TestCase
             "height"    => 5.5
         ]);
         $dps = $human->toArray();
-        foreach ($human as $datapoint => $value) {
-            $this->assertEquals($dps[$datapoint], $value);
+        foreach ($human as $name => $value) {
+            $this->assertEquals($dps[$name], $value);
         }
     }
 

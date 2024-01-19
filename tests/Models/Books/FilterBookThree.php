@@ -17,19 +17,31 @@ class FilterBookThree extends DataModel implements ArrayAccess
     #[
       Attr\Filter("trim"),
       Attr\Filter("strtolower"),
-      Attr\Filter("ucwords", args: [" \t\r\n\f\v"])
+      Attr\Filter("ucwords", args: [" .\t\r\n\f\v"])
     ]
+    #[Attr\Check("#is_ucfirst")]
     public ?string $name = null;
 
     #[Attr\DataPoint]
-    #[Attr\Filter(ref : [FilterBookOne::class, "name"])]
+    #[Attr\Filter(ref : "#name")]
+    #[Attr\Check("strlen", args: [], against : [ ">=", 3 ])]
     public string $author = "";
 
     #[Attr\DataPoint]
-    #[Attr\Filter(ref : "QDM\Tests\Models\Books\FilterBookOne#name")]
-    public ?string $co_author = null;
+    #[Attr\Filter(ref : "#name")]
+    #[
+      Attr\Check(ref: "#author"),
+      Attr\Check("strlen", args: [], against : [ ">=", 3 ])
+    ]
+    public string $co_author = "";
 
     #[Attr\DataPoint]
     #[Attr\Filter(ref : "#name")]
+    #[Attr\Check("#is_ucfirst", args: [], against : [ "===", true ])]
     public string $publisher = "";
+
+    public static function is_ucfirst(string $value) : bool
+    {
+      return $value[0] === strtoupper($value[0]);
+    }
 }

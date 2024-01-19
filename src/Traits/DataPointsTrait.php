@@ -13,50 +13,50 @@ trait DataPointsTrait
     /**
      * @var array<int,string> The data point index
      */
-    protected array $data_point_index = [];
+    protected array $qdm_data_point_index = [];
 
     /**
      * @var array<string,DataPoint> The collected data points
      */
-    private array $data_points = [];
+    private array $qdm_data_points = [];
 
     /**
      * If it has an extra data point this means all extra data will be stored in this data point
      * It must be an array.
      * @var DataPoint The extra data point
      */
-    private ?DataPoint $extra_data = null;
+    private ?DataPoint $qdm_extra_data = null;
 
     /**
      * return all DataPoints names
      * @return array<string>
      */
-    private function getDataPointsNames() : array
+    final protected function getDataPointsNames() : array
     {
-        return array_keys($this->data_points);
+        return array_keys($this->qdm_data_points);
     }
 
     /**
      * return a DataPoint by key name or position
      */
-    private function getDataPoint(string|int $key) : ?DataPoint
+    final protected function getDataPoint(string|int $key) : ?DataPoint
     {
         return is_int($key)
-            ? $this->data_points[$this->data_point_index[$key]] ?? null
-            : $this->data_points[$key] ?? null;
+            ? $this->qdm_data_points[$this->qdm_data_point_index[$key]] ?? null
+            : $this->qdm_data_points[$key] ?? null;
     }
 
     /**
      * Saves an extra key value if extra data point is set
      */
-    private function saveExtra(string|int $key, mixed $value, bool $import = false) : bool
+    final protected function saveExtraValue(string|int $key, mixed $value, bool $import = false) : bool
     {
         if (
-            $this->extra_data && // If it has an extra data point
-            (!$import || $this->extra_data->import) // Whether its importable or not
+            $this->qdm_extra_data && // If it has an extra data point
+            (!$import || $this->qdm_extra_data->import) // Whether its importable or not
         ) {
             // No need to check if it's an array because it's already checked in the constructor
-            $this->{$this->extra_data->name}[$key] = $value;
+            $this->{$this->qdm_extra_data->name}[$key] = $value;
             return true;
         }
         return false;
@@ -99,7 +99,7 @@ trait DataPointsTrait
                 }
 
                 // Save the extra data point:
-                $this->extra_data = $dp;
+                $this->qdm_extra_data = $dp;
 
                 // Make its initialize:
                 if (!isset($this->{$dp->name}) || !is_array($this->{$dp->name})) {
@@ -110,7 +110,7 @@ trait DataPointsTrait
                 return false;
             }
 
-            $this->data_points[$dp->name] = $dp;
+            $this->qdm_data_points[$dp->name] = $dp;
             return true;
         }
         return false;
@@ -122,6 +122,6 @@ trait DataPointsTrait
      */
     private function buildDataPointIndex() : void
     {
-        $this->data_point_index = array_column($this->data_points, "name", "position");
+        $this->qdm_data_point_index = array_column($this->qdm_data_points, "name", "position");
     }
 }

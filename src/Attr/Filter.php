@@ -35,6 +35,54 @@ class Filter extends ReferableDataModelAttr
     }
 
     /**
+     * Apply filters to a value
+     *
+     * Will mutate the given value and return true if all filters were applied successfully
+     * Otherwise will return false and populate the given errors array
+     *
+     * @param mixed $value The value to apply filters to
+     * @param array<\QDM\Attr\Filter> $filters The filters to apply
+     * @param array<string> $errors The errors array to populate
+     */
+    final public static function applyFilters(
+        mixed &$value,
+        array $filters,
+        array &$errors = []
+    ) : bool {
+
+        foreach ($filters as $filter) {
+            $method = $filter->call;
+            $args   = $filter->args;
+            $types  = $filter->types;
+
+            // Check if filter is callable
+            $call_filter = Filter::isCallable($method);
+
+            if ($call_filter === false) {
+                $name = is_array($method) ? implode("::", $method) : $method;
+                $errors[] = "Filter '{$name}' is not callable";
+                return false;
+            }
+
+            // Apply value to the args array
+            $args = Filter::applyValueToArgs($value, $args);
+
+            // Execute filter
+            [$status, $after] = Filter::execFilter($method, $args, $types);
+
+            // Check if filter was applied successfully
+            if (!$status) {
+                $errors[] = $after;
+                return false;
+            }
+
+            // Update value
+            $value = $after;
+        }
+        return true;
+    }
+
+    /**
      * Describe the filter
      *
      * return a string representation of the filter definition
@@ -48,14 +96,15 @@ class Filter extends ReferableDataModelAttr
      * A filter definition
      *
      * @param string|array<string> $call The callable to be used as a filter
-     * @param int $value_pos the position of the value to be filtered in the args array
      * @param array<mixed> $args The extra arguments to be passed to the filter
+     * @param int $value_pos the position of the value to be filtered in the args array
      * @param string|array<string> $types The expected return types of the filter
+     * @param string|array<string> $ref A reference to a data point to inherit its filter
      */
     public function __construct(
         public string|array $call = "",
-        int $value_pos = 0,
         public array $args = [],
+        int $value_pos = 0,
         public string|array $types = "mixed",
         public string|array|null $ref = null
     ) {
@@ -81,24 +130,7 @@ class Filter extends ReferableDataModelAttr
     {
         $call = is_array($this->call) ? implode("::", $this->call) : $this->call;
         $args = array_map(
-            function ($arg) {
-                if ($arg === self::VALUE_MARKER) {
-                    return "#V";
-                }
-                if (is_numeric($arg) || (is_string($arg) && strlen($arg) <= 15 && !empty(trim($arg)))) {
-                    return is_string($arg)
-                            ? str_replace(
-                                [ "\n", "\r", "\t", "\v", "\f" ],
-                                [ '\n', '\r', '\t', '\v', '\f' ],
-                                $arg
-                            )
-                            : $arg;
-                }
-                if (is_bool($arg)) {
-                    return $arg ? "true" : "false";
-                }
-                return gettype($arg);
-            },
+            fn($arg) => self::argStringable($arg),
             $this->args
         );
         $types = implode("|", $this->types) ?: "mixed";

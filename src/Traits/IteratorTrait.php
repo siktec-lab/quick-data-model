@@ -8,12 +8,12 @@ use QDM\DataModel;
 
 trait IteratorTrait
 {
-    private int $position = 0;
+    private int $qdm_iter_position = 0;
 
     final public function current() : mixed
     {
         if ($this instanceof DataModel) {
-            return $this->get($this->data_point_index[$this->position]);
+            return $this->get($this->qdm_data_point_index[$this->qdm_iter_position]);
         }
         // Its a collection:
         return current($this->items);
@@ -22,7 +22,7 @@ trait IteratorTrait
     final public function key() : mixed
     {
         if ($this instanceof DataModel) {
-            return $this->data_point_index[$this->position];
+            return $this->qdm_data_point_index[$this->qdm_iter_position];
         }
         return key($this->items);
     }
@@ -30,7 +30,7 @@ trait IteratorTrait
     final public function next() : void
     {
         if ($this instanceof DataModel) {
-            ++$this->position;
+            ++$this->qdm_iter_position;
             return;
         }
         // Its a collection:
@@ -40,7 +40,7 @@ trait IteratorTrait
     final public function rewind() : void
     {
         if ($this instanceof DataModel) {
-            $this->position = 0;
+            $this->qdm_iter_position = 0;
             return;
         }
         // Its a collection:
@@ -50,7 +50,7 @@ trait IteratorTrait
     final public function valid() : bool
     {
         if ($this instanceof DataModel) {
-            return isset($this->data_point_index[$this->position]);
+            return isset($this->qdm_data_point_index[$this->qdm_iter_position]);
         }
         // Its a collection: we use array_key_exists instead of isset
         // because we want to allow null values
