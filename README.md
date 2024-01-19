@@ -194,7 +194,7 @@ $dealership3->from([ // Import the Car Dealership from an array
 - [x] The Collection Should Type Check the items added to it and be configurable to allow or not allow types.
 - [x] Add more control over how the Collection handles Keys. Especially when adding items to the collection or removing items from the collection.
 - [x] Add a `Filter` attribute to the DataModel class to normalize the DataPoint values before they are set.
-- [ ] Add an option to reference a `Filter` group from DataPoint. This way we can avoid repeating the same filter sequence for multiple DataPoints.
+- [x] Add an option to reference a `Filter` group from DataPoint. This way we can avoid repeating the same filter sequence for multiple DataPoints.
 - [x] Add some basic filters that are by default available to the developer. **With the new filter option this is no longer needed as we can call any function**
 - [ ] Add a `Check` Similar to filter but should return a boolean value. and an optional error message. This is usefull for implementing advanced validation.
 - [ ] Add a `validate()` method to the DataModel class that will run all the `Check` filters and return an array of errors. Although a `Check` is always invoked before setting a value on a DataPoint this method can be used to validate the entire DataModel after it has been initialized and maybe modified by the user.
