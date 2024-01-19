@@ -6,7 +6,6 @@ namespace QDM\Traits;
 
 use ReflectionProperty;
 use QDM\Attr\Filter;
-use QDM\Attr\DataPoint;
 
 trait FiltersTrait
 {
@@ -31,7 +30,7 @@ trait FiltersTrait
         array $filters,
         array &$errors = []
     ) : bool {
-        // Loop through filters
+
         foreach ($filters as $filter) {
             $method = $filter->call;
             $args   = $filter->args;
@@ -46,17 +45,20 @@ trait FiltersTrait
                 return false;
             }
 
-            // Apply value marker use the replac
+            // Apply value to the args array
             $args = Filter::applyValueToArgs($value, $args);
 
             // Execute filter
-            [$status, $value] = Filter::execFilter($method, $args, $types);
+            [$status, $after] = Filter::execFilter($method, $args, $types);
 
             // Check if filter was applied successfully
             if (!$status) {
-                $errors[] = $value;
+                $errors[] = $after;
                 return false;
             }
+
+            // Update value
+            $value = $after;
         }
         return true;
     }
@@ -81,20 +83,19 @@ trait FiltersTrait
 
     /**
      * Build a data point from a property:
+     *
+     * A simple wrapper around the buildFilters method
+     *
+     *
+     * @throws DataModelException if the a Filter declaration is invalid
      */
-    private function buildFilters(
-        ReflectionProperty $property,
-        DataPoint $dp
-    ) : bool {
-        // Collect
-        $attributes = $property->getAttributes(Filter::class);
-        $filters = [];
-        foreach ($attributes as $attribute) {
-            $filters[] = $attribute->newInstance();
-        }
-        if (!empty($filters)) {
-            $this->property_filters[$dp->name] = $filters;
-        }
-        return !empty($filters);
+    private function buildFilters(ReflectionProperty $property) : void
+    {
+        $this->property_filters[$property->getName()] = [];
+        Filter::buildAttributes(
+            Filter::class,
+            $this->property_filters[$property->getName()],
+            $property
+        );
     }
 }

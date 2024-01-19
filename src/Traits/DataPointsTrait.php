@@ -69,7 +69,7 @@ trait DataPointsTrait
      */
     private function buildDataPoint(ReflectionProperty $property, int $position) : bool
     {
-        // Collect
+
         $attributes = $property->getAttributes(DataPoint::class);
         if (count($attributes) > 0) {
             // Basic data point info:

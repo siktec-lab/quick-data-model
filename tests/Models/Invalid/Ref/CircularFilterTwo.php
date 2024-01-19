@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace QDM\Tests\Models\Books;
+namespace QDM\Tests\Models\Invalid\Ref;
 
 use QDM\Attr;
 use QDM\DataModel;
 use QDM\Traits;
 use ArrayAccess;
 
-class FilterBookOne extends DataModel implements ArrayAccess
+class CircularFilterTwo extends DataModel implements ArrayAccess
 {
     use Traits\ArrayAccessTrait;
 
@@ -22,14 +22,6 @@ class FilterBookOne extends DataModel implements ArrayAccess
     public ?string $name = null;
 
     #[Attr\DataPoint]
-    #[Attr\Filter(ref : [FilterBookOne::class, "name"])]
+    #[Attr\Filter(ref : [CircularFilterOne::class, "author"])]
     public string $author = "";
-
-    #[Attr\DataPoint]
-    #[Attr\Filter(ref : "QDM\Tests\Models\Books\FilterBookOne#name")]
-    public ?string $co_author = null;
-
-    #[Attr\DataPoint]
-    #[Attr\Filter(ref : "#name")]
-    public string $publisher = "";
 }

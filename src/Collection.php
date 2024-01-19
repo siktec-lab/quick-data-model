@@ -360,6 +360,20 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
     }
 
     /**
+     * Describe the collection
+     *
+     * @param array<string> $found_nested The nested data models found
+     * @return array<string,array|string|null> self descrption dictionary
+     */
+    final public function describe(array &$found_nested = []) : array
+    {
+        return [
+            "name"   => "QDM\Collection",
+            "items" => implode("|", $this->types)
+        ];
+    }
+
+    /**
      * Populate the collection from an array
      *
      * $errors will be filled with any errors that occurred during the initialization
@@ -381,20 +395,6 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
             }
         }
         return count($errors) == $init_errors;
-    }
-
-    /**
-     * Describe the collection
-     *
-     * @param array<string> $found_nested The nested data models found
-     * @return array<string,array|string|null> self descrption dictionary
-     */
-    final public function describe(array &$found_nested = []) : array
-    {
-        return [
-            "name"   => "QDM\Collection",
-            "items" => implode("|", $this->types)
-        ];
     }
 
     /**
@@ -420,6 +420,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
      */
     private function defineCollection() : void
     {
+        //TODO: this should move to the Attr\Collect attribute
         // Get the collection attribute:
         $reflection = new ReflectionClass($this);
         $attributes = $reflection->getAttributes();
@@ -450,6 +451,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
      */
     private function isTypeValid(object|string $value) : bool
     {
+        //TODO: this should move to the Attr\Collect attribute
         if (empty($this->types) && is_a($value, IDataModel::class)) {
             return true;
         }

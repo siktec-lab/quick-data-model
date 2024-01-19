@@ -6,37 +6,11 @@ namespace QDM\Attr;
 
 use Attribute;
 use Throwable;
-use QDM\Attr\DataPoint;
+use QDM\Attr\ReferableDataModelAttr;
 
 #[Attribute(Attribute::TARGET_PROPERTY | Attribute::IS_REPEATABLE)]
-class Filter
+class Filter extends ReferableDataModelAttr
 {
-    public const VALUE_MARKER = "!VALUE!";
-
-    /**
-     * Check if a callable is valid and return the full callable
-     *
-     * @param string|array<string> $callable
-     */
-    final public static function isCallable(array|string $callable) : string|bool
-    {
-        $call_filter = $callable;
-        return is_callable($callable, false, $call_filter) ? $call_filter : false;
-    }
-
-    /**
-     * Replaces the special value marker with the given value inside the args array
-     *
-     * @return array<mixed>
-     */
-    final public static function applyValueToArgs(mixed $value, array $args) : array
-    {
-        return array_map(
-            fn($arg) => $arg === self::VALUE_MARKER ? $value : $arg,
-            $args
-        );
-    }
-
     /**
      * Execute a filter
      *
@@ -46,10 +20,10 @@ class Filter
     {
         try {
             $value = call_user_func_array($callable, $args);
-            $type = DataPoint::typeName(gettype($value));
+            $type = self::typeName(gettype($value));
             $valid = empty($types) || in_array(
                 $type,
-                is_string($types) ? self::typesFromString($types) : $types
+                is_string($types) ? self::typesArrayFromString($types) : $types
             );
             return [
                 $valid,
@@ -61,45 +35,33 @@ class Filter
     }
 
     /**
-     * Convert a string of types to an array of types
-     * e.g. "int|string" -> [ "int", "string" ]
-     *
-     * @return array<string>
-     */
-    final public static function typesFromString(string $types) : array
-    {
-        return array_filter(
-            explode("|", $types),
-            fn($type) => !empty(trim($type))
-        );
-    }
-
-    /**
      * Describe the filter
-     * 
+     *
      * return a string representation of the filter definition
      */
     final public function describe() : string
     {
         return $this->__toString();
     }
+
     /**
      * A filter definition
      *
      * @param string|array<string> $call The callable to be used as a filter
-     * @param int $value_pos The position of the value marker in the args array
-     * @param array<mixed> $args The arguments to be passed to the filter
-     * @param string|array<string> $types The types of the return value to be accepted
+     * @param int $value_pos the position of the value to be filtered in the args array
+     * @param array<mixed> $args The extra arguments to be passed to the filter
+     * @param string|array<string> $types The expected return types of the filter
      */
     public function __construct(
-        public string|array $call,
+        public string|array $call = "",
         int $value_pos = 0,
         public array $args = [],
-        public string|array $types = "mixed"
+        public string|array $types = "mixed",
+        public string|array|null $ref = null
     ) {
 
         $this->args = self::placeMarkerInArgs($value_pos, $this->args);
-        $this->types = is_string($this->types) ? self::typesFromString($this->types) : $this->types;
+        $this->types = is_string($this->types) ? self::typesArrayFromString($this->types) : $this->types;
         // Mixed means any type so we set it to an empty array
         if (in_array("mixed", $this->types)) {
             $this->types = [];
@@ -113,48 +75,39 @@ class Filter
     }
 
     /**
-     * Place a special value marker in the args array
-     *
-     * @return array<mixed>
-     */
-    private static function placeMarkerInArgs($position, $args) : array
-    {
-        // Ensure the position is within the valid range
-        $position = max(min($position, count($args)), -count($args) - 1);
-        // Insert the marker at the specified position
-        array_splice($args, $position, 0, [self::VALUE_MARKER]);
-        return $args;
-    }
-
-    /**
-     * Describe the filter
+     * Describes the filter
      */
     final public function __toString() : string
     {
         $call = is_array($this->call) ? implode("::", $this->call) : $this->call;
         $args = array_map(
-            function($arg) {
+            function ($arg) {
                 if ($arg === self::VALUE_MARKER) {
                     return "#V";
                 }
-                if (is_numeric($arg) || (is_string($arg) && strlen($arg) <= 15 && !empty(trim($arg)))) { 
-                    return $arg;
+                if (is_numeric($arg) || (is_string($arg) && strlen($arg) <= 15 && !empty(trim($arg)))) {
+                    return is_string($arg)
+                            ? str_replace(
+                                [ "\n", "\r", "\t", "\v", "\f" ],
+                                [ '\n', '\r', '\t', '\v', '\f' ],
+                                $arg
+                            )
+                            : $arg;
                 }
                 if (is_bool($arg)) {
                     return $arg ? "true" : "false";
                 }
                 return gettype($arg);
-            }, 
+            },
             $this->args
         );
         $types = implode("|", $this->types) ?: "mixed";
         //TODO: maybe its a reference to a data point
         return sprintf(
-            "%s(%s) -> %s", 
-            $call, 
+            "%s(%s) -> %s",
+            $call,
             implode(",", $args),
             $types
         );
     }
-
 }

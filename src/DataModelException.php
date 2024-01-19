@@ -14,6 +14,9 @@ class DataModelException extends Exception
     public const CODE_JSON_SERIALIZE_ERROR  = 143;
     public const CODE_COLLECTION_TYPES      = 144;
     public const CODE_COLLECTION_ITEM_BUILD = 145;
+    public const CODE_CIRCULAR_REFERENCE    = 146;
+    public const CODE_REFERABLE_NOT_DATAMODEL = 147;
+    public const CODE_REFERABLE_NOT_DATAPOINT = 148;
 
     // MESSAGE CODES TEMPLATES => CODE => MESSAGE, NUMBER OF ARGUMENTS
     private const MESSAGES = [
@@ -23,6 +26,9 @@ class DataModelException extends Exception
         self::CODE_JSON_SERIALIZE_ERROR  => ["JSON serialization error: %s", 1],
         self::CODE_COLLECTION_TYPES      => ["All Collection types must implement IDataModel. Got '%s'", 1],
         self::CODE_COLLECTION_ITEM_BUILD => ["Cannot build a collection item", 0],
+        self::CODE_CIRCULAR_REFERENCE    => ["Circular '%s' reference detected between '%s' <-> '%s'", 3],
+        self::CODE_REFERABLE_NOT_DATAMODEL => ["Invalid referenced class '%s' in '%s' Attribute", 2],
+        self::CODE_REFERABLE_NOT_DATAPOINT => ["Invalid referenced DataPoint '%s' in '%s' Attribute", 2],
     ];
 
     /**

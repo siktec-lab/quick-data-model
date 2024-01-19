@@ -110,81 +110,6 @@ abstract class DataModel implements IDataModel
         return !$export ? $this->{$name} : ($dp->export ? $this->{$name} : null);
     }
 
-        /**
-     * Set a data point
-     * $errors will be filled with any errors that occurred during the initialization
-     */
-    public function set(mixed $value, string $name, array &$errors = [], bool $import = false) : bool
-    {
-        // If its not initialized then initialize it:
-        if (!$this->is_initialized && !$this->initialize(false)) {
-            $errors[] = "Data model could not be initialized declaration error";
-            return false;
-        }
-
-        // Get the data point:
-        $dp = $this->getDataPoint($name);
-        if (is_null($dp)) {
-            // If its an extra data point then save it:
-            if (!$this->saveExtra($name, $value, $import)) {
-                $errors[] = "Data point '{$name}' does not exist";
-                return false;
-            }
-            // We saved it so we are done:
-            return true;
-        }
-
-        // Should we import this data point:
-        if ($import && !$dp->import) {
-            return false; // We are not raising an error here because its not an error we just ignore it.
-        }
-
-        // Apply the custom filter if any:
-        if (
-            $this->hasFilters($dp->name) &&
-            !self::applyFilters($value, $this->getFilters($dp->name), $errors)
-        ) {
-            return false;
-        }
-
-        // If its required and its null then we have an error:
-        if ($dp->required && is_null($value)) {
-            $errors[] = "Required data point '{$name}' cannot be null";
-            return false;
-        }
-
-        // If its an array or object maybe its a nested data model:
-        if ($dp->is_data_model) {
-            // Only object array or string are allowed:
-            if (!is_array($value) && !is_object($value) && !is_string($value)) {
-                $errors[] = "Data point '{$name}' must be an array, object or string";
-                return false;
-            }
-            // Build the data model:
-            $dm = new $dp->types[0]();
-            if (!$dm->from($value, $errors)) {
-                return false;
-            }
-            $this->{$name} = $dm;
-            return true;
-        }
-
-        // Type check:
-        if (!$dp->isTypeAllowed($value)) {
-            $errors[] =  sprintf(
-                "DataPoint '%s' must be of type '%s' -> Got '%s'",
-                $name,
-                implode("|", $dp->types),
-                gettype($value)
-            );
-            return false;
-        }
-
-        // Set the value:
-        $this->{$name} = $value;
-        return true;
-    }
-
     /**
      * Convert the data model to an array
      * @return array<string,mixed>
@@ -258,6 +183,36 @@ abstract class DataModel implements IDataModel
     }
 
     /**
+     * Describe will return an array with the data model composition
+     *
+     * @return array<string,array|string|null> self descrption dictionary
+     */
+    final public function describe(array &$found_nested = []) : array
+    {
+        // Check if initialized otherwise initialize it:
+        if (!$this->is_initialized && !$this->initialize(false)) {
+            return [];
+        }
+
+        $struct = [];
+        foreach ($this->data_points as $dp) {
+            $filters = array_map(fn($f) => $f->describe(), $this->getFilters($dp->name));
+            $struct[$dp->name] = array_merge(
+                $dp->describe($found_nested),
+                [
+                    // TODO: Add setter and getter checks...
+                    // TODO: Add model scope applied actions
+                    "filters" => $filters ?: null,
+                    "setter" => "TODO",
+                    "getter" => "TODO",
+                    "checks" => "TODO"
+                ]
+            );
+        }
+        return $struct;
+    }
+
+    /**
      * Populate the data model from an array
      * $errors will be filled with any errors that occurred during the initialization
      * Will return true if no errors occurred
@@ -286,37 +241,6 @@ abstract class DataModel implements IDataModel
     }
 
     /**
-     * Describe will return an array with the data model composition
-     * 
-     * @return array<string,array|string|null> self descrption dictionary
-     */
-    final public function describe(array &$found_nested = []) : array
-    {
-        // Check if initialized otherwise initialize it:
-        if (!$this->is_initialized && !$this->initialize(false)) {
-            return [];
-        }
-        
-        $struct = [];
-        foreach ($this->data_points as $dp) {
-            $filters = array_map( fn($f) => $f->describe(), $this->getFilters($dp->name));
-            $struct[$dp->name] = array_merge(
-                $dp->describe($found_nested), 
-                [
-                    // TODO: Add setter and getter checks...
-                    // TODO: Add model scope applied actions
-                    "filters" => $filters ?: null,
-                    "setter" => "TODO",
-                    "getter" => "TODO",
-                    "checks" => "TODO"
-                ]
-            );
-            
-        }
-        return $struct;
-    }
-
-    /**
      * Create a new data model
      * You can pass an array, object or json string to initialize the data model
      * This is the same as calling 'from' on the data model.
@@ -333,6 +257,81 @@ abstract class DataModel implements IDataModel
         }
     }
 
+        /**
+         * Set a data point
+         * $errors will be filled with any errors that occurred during the initialization
+         */
+    public function set(mixed $value, string $name, array &$errors = [], bool $import = false) : bool
+    {
+        // If its not initialized then initialize it:
+        if (!$this->is_initialized && !$this->initialize(false)) {
+            $errors[] = "Data model could not be initialized declaration error";
+            return false;
+        }
+
+        // Get the data point:
+        $dp = $this->getDataPoint($name);
+        if (is_null($dp)) {
+            // If its an extra data point then save it:
+            if (!$this->saveExtra($name, $value, $import)) {
+                $errors[] = "Data point '{$name}' does not exist";
+                return false;
+            }
+            // We saved it so we are done:
+            return true;
+        }
+
+        // Should we import this data point:
+        if ($import && !$dp->import) {
+            return false; // We are not raising an error here because its not an error we just ignore it.
+        }
+
+        // Apply the custom filter if any:
+        if (
+            $this->hasFilters($dp->name) &&
+            !self::applyFilters($value, $this->getFilters($dp->name), $errors)
+        ) {
+            return false;
+        }
+
+        // If its required and its null then we have an error:
+        if ($dp->required && is_null($value)) {
+            $errors[] = "Required data point '{$name}' cannot be null";
+            return false;
+        }
+
+        // If its an array or object maybe its a nested data model:
+        if ($dp->is_data_model) {
+            // Only object array or string are allowed:
+            if (!is_array($value) && !is_object($value) && !is_string($value)) {
+                $errors[] = "Data point '{$name}' must be an array, object or string";
+                return false;
+            }
+            // Build the data model:
+            $dm = new $dp->types[0]();
+            if (!$dm->from($value, $errors)) {
+                return false;
+            }
+            $this->{$name} = $dm;
+            return true;
+        }
+
+        // Type check:
+        if (!$dp->isTypeAllowed($value)) {
+            $errors[] =  sprintf(
+                "DataPoint '%s' must be of type '%s' -> Got '%s'",
+                $name,
+                implode("|", $dp->types),
+                gettype($value)
+            );
+            return false;
+        }
+
+        // Set the value:
+        $this->{$name} = $value;
+        return true;
+    }
+
     /**
      * Get the data points of the data model
      *
@@ -346,7 +345,7 @@ abstract class DataModel implements IDataModel
             // Data point:
             if ($this->buildDataPoint($property, $property_position)) {
                 // Parse the filters for the data point:
-                $this->buildFilters($property, $this->getDataPoint($property->getName()));
+                $this->buildFilters($property);
                 // Next DataPoint:
                 $property_position++;
             }

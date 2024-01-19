@@ -9,7 +9,7 @@ use QDM\DataModel;
 use QDM\Traits;
 use ArrayAccess;
 
-class FilterBookOne extends DataModel implements ArrayAccess
+class FilterBookThree extends DataModel implements ArrayAccess
 {
     use Traits\ArrayAccessTrait;
 
@@ -17,7 +17,7 @@ class FilterBookOne extends DataModel implements ArrayAccess
     #[
       Attr\Filter("trim"),
       Attr\Filter("strtolower"),
-      Attr\Filter("ucwords", args: [" .\t\r\n\f\v"])
+      Attr\Filter("ucwords", args: [" \t\r\n\f\v"])
     ]
     public ?string $name = null;
 

@@ -53,10 +53,8 @@ class StringableTest extends TestCase
         $carLot = new Models\CarLot();
         $struct = $carLot->describe();
 
-        print_r($struct);
-
         $this->assertArrayHasKey("cars", $struct);
-        // Nested cars descrip:
+        // Nested cars describe:
         $expected = [
             "name" => "QDM\Collection",
             "items" => "QDM\Tests\Models\SimpleCar"

@@ -14,7 +14,7 @@ use QDM\Interfaces\IDataModel;
 
 // An attribute class to mark if property is a data point its called DataPoint and it accepts a boolean flag
 #[Attribute(Attribute::TARGET_PROPERTY)]
-class DataPoint
+class DataPoint extends BaseAttr
 {
     public int $position = 0;
 
@@ -93,27 +93,6 @@ class DataPoint
     }
 
     /**
-     * Normalize the type name
-     * e.g. int -> integer, bool -> boolean, double -> float
-     */
-    final public static function typeName(string|array $type) : string|array
-    {
-        if (is_array($type)) {
-            return array_map(fn($t) => self::typeName($t), $type);
-        }
-        switch ($type) {
-            case "int":
-                return "integer";
-            case "bool":
-                return "boolean";
-            case "double":
-                return "float";
-            default:
-                return $type;
-        }
-    }
-
-    /**
      * Check if the a given value is allowed for this DataPoint
      */
     final public function isTypeAllowed(mixed &$value) : bool
@@ -140,20 +119,29 @@ class DataPoint
     final public function describe(array &$found_nested = []) : array
     {
         $flags = array_filter(
-            [!$this->required ?: "required", 
-             !$this->export ?: "export", 
+            [!$this->required ?: "required",
+             !$this->export ?: "export",
              !$this->import ?: "import",
-             !$this->extra ?: "extra"], 
-             fn($f) => is_string($f)
+             !$this->extra ?: "extra"],
+            fn($f) => is_string($f)
         );
         return [
             "name"   => $this->name,
             "types"  => implode("|", $this->types),
             "flags"  => implode(",", $flags),
             "nested" => $this->describeNested($found_nested)
-    ];
+        ];
     }
 
+    /**
+     * The type of the collection or mixed for any type
+     * that implements the IDataModel interface
+     *
+     * @param bool $required If true this data point is required (cannot be null even if nullable)
+     * @param bool|null $export If true this data point will be exported regardless of its access modifier
+     * @param bool|null $import If false this data point will not be imported regardless of its access modifier
+     * @param bool $extra If true this will catch all extra data passed to the data model when importing
+     */
     public function __construct(
         public bool $required = false,
         public ?bool $export = null,
@@ -165,13 +153,12 @@ class DataPoint
     /**
      * Describe the nested data model if any
      * @param array<string> $found_nested used to detect circular references
-     * @return array|string|null self model description or error message
+     * @return array<mixed>|string|null self model description or error message
      */
     private function describeNested(array &$found_nested) : array|string|null
     {
         // Try to describe the nested data model:
         if ($this->is_data_model && is_a($this->types[0], IDataModel::class, true)) {
-
             // Make sure we don't have a circular reference:
             $check = is_array($this->types[0]) ? implode("::", $this->types[0]) : $this->types[0];
             if (in_array($check, $found_nested)) {

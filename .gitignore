@@ -4,7 +4,7 @@ local/*
 
 /.vscode/
 *.code-workspace
-
+.VSCodeCounter/
 # PHP ignores
 /vendor/
 composer.lock
