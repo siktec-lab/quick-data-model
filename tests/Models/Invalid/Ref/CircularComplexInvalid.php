@@ -19,16 +19,16 @@ class CircularComplexInvalid extends DataModel implements ArrayAccess
 
     #[Attr\DataPoint]
     #[Attr\Filter(ref: [self::class, "one"])]
-    #[Attr\Filter(ref: "#three")]
-    #[Attr\Filter(ref: "QDM\Tests\Models\Invalid\Ref\CircularComplexInvalid#four")] //circular reference <--------
+    #[Attr\Filter(ref: "::three")]
+    #[Attr\Filter(ref: "QDM\Tests\Models\Invalid\Ref\CircularComplexInvalid::four")] //circular reference <--------
     public ?string $two = null;
 
     #[Attr\DataPoint]
-    #[Attr\Filter(ref: "#one")]
+    #[Attr\Filter(ref: "::one")]
     public ?string $three = null;
 
     #[Attr\DataPoint]
-    #[Attr\Filter(ref: "QDM\Tests\Models\Invalid\Ref\CircularComplexInvalid#three")]
+    #[Attr\Filter(ref: "QDM\Tests\Models\Invalid\Ref\CircularComplexInvalid::three")]
     #[Attr\Filter(ref: [self::class, "two"])] // This is the circular reference   <--------------------------------
     public ?string $four = null;
 }

@@ -19,17 +19,17 @@ class FilterComplexRef extends DataModel implements ArrayAccess
 
     #[Attr\DataPoint]
     #[Attr\Filter(ref: [self::class, "one"])]
-    #[Attr\Filter(ref: "#three")]
-    #[Attr\Filter(ref: "QDM\Tests\Models\Books\FilterComplexRef#four")] //circular reference <--------
+    #[Attr\Filter(ref: "::three")]
+    #[Attr\Filter(ref: "QDM\Tests\Models\Books\FilterComplexRef::four")] //circular reference <--------
     public ?string $two = null;
 
     #[Attr\DataPoint]
-    #[Attr\Filter(ref: "#one")]
+    #[Attr\Filter(ref: "::one")]
     #[Attr\Filter("strtolower")]
     public ?string $three = null;
 
     #[Attr\DataPoint]
-    #[Attr\Filter(ref: "QDM\Tests\Models\Books\FilterComplexRef#three")]
+    #[Attr\Filter(ref: "QDM\Tests\Models\Books\FilterComplexRef::three")]
     #[Attr\Filter("ucwords")]
     public ?string $four = null;
 }

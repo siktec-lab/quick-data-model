@@ -131,6 +131,7 @@ final class ArrayAceesTest extends TestCase
 
     public function testCollectionArrayAccess() : void
     {
+        $errors = [];
         $pool = new Models\CarPool([
             [
                 "brand"     => "Toyota",
@@ -147,8 +148,8 @@ final class ArrayAceesTest extends TestCase
                 "model"     => "Corolla XSE",
                 "year"      => 2019,
             ]
-        ]);
-
+        ], $errors);
+        $this->assertEmpty($errors);
         $this->assertCount(3, $pool);
 
         // Change the year of the first car

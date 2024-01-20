@@ -26,10 +26,10 @@ class FilterBookOne extends DataModel implements ArrayAccess
     public string $author = "";
 
     #[Attr\DataPoint]
-    #[Attr\Filter(ref : "QDM\Tests\Models\Books\FilterBookOne#name")]
+    #[Attr\Filter(ref : "QDM\Tests\Models\Books\FilterBookOne::name")]
     public ?string $co_author = null;
 
     #[Attr\DataPoint]
-    #[Attr\Filter(ref : "#name")]
+    #[Attr\Filter(ref : "::name")]
     public string $publisher = "";
 }

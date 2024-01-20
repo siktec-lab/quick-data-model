@@ -9,6 +9,7 @@ use ReflectionProperty;
 use QDM\Attr\BaseAttr;
 use QDM\Interfaces\IDataModel;
 use QDM\DataModelException;
+use QDM\Traits\AppendErrorTrait;
 
 /**
  * A base class for referable attributes
@@ -22,6 +23,9 @@ use QDM\DataModelException;
  */
 abstract class ReferableDataModelAttr extends BaseAttr
 {
+
+    use AppendErrorTrait;
+
     /**
      * A special value marker to be used in the args array
      */
@@ -30,7 +34,7 @@ abstract class ReferableDataModelAttr extends BaseAttr
     /**
      * A Shorthand for a reference to a self Class
      */
-    public const SELF_REF = "#";
+    public const SELF_REF = "::";
 
     /**
      * A cache of referable attributes
@@ -40,6 +44,16 @@ abstract class ReferableDataModelAttr extends BaseAttr
      * @var array<string,array<\QDM\Attr\ReferableDataModelActionAttribute>> The collected cached Attributes
      */
     protected static $cache = [];
+
+    /**
+     * The parent DataModel class name
+     */
+    public string $parent_data_model_name = "";
+
+    /**
+     * The parent DataPoint name
+     */
+    public string $parent_data_point_name = "";
 
     /**
      * Check if a callable is valid and return the full callable
@@ -82,8 +96,10 @@ abstract class ReferableDataModelAttr extends BaseAttr
         // Collect the attributes:
         foreach ($attributes as $attribute) {
             $attr = $attribute->newInstance();
+            $attr->parent_data_model_name = $reflected_cls->getName();
+            $attr->parent_data_point_name = $property->getName();
             if ($attr->ref) {
-                $caller = $reflected_cls->getName() . "::" . $property->getName();
+                $caller = $attr->parent_data_model_name . "::" . $attr->parent_data_point_name;
                 $attr_type::getRefAttributes(
                     $attr_type,
                     $collect,
@@ -213,7 +229,7 @@ abstract class ReferableDataModelAttr extends BaseAttr
     final protected static function argStringable(mixed $arg) : string
     {
         return match (true) {
-            $arg === self::VALUE_MARKER => "#V",
+            $arg === self::VALUE_MARKER => "@V",
             is_numeric($arg) || (is_string($arg) && strlen($arg) <= 15 && !empty(trim($arg))) => 
                 is_string($arg)
                     ? str_replace(
@@ -227,4 +243,5 @@ abstract class ReferableDataModelAttr extends BaseAttr
             default => gettype($arg),
         };
     }
+
 }

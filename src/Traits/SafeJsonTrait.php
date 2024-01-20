@@ -31,12 +31,12 @@ trait SafeJsonTrait
         bool $assoc = false,
         int $depth = 512,
         int $options = 0,
-        array &$errors = []
+        string &$error = ""
     ) : mixed {
         try {
             return $this->jsonDecode($json, $assoc, $depth, $options);
         } catch (DataModelException $e) {
-            $errors[] = $e->getMessage();
+            $error = $e->getMessage();
             return null;
         }
     }
@@ -45,12 +45,12 @@ trait SafeJsonTrait
         mixed $value,
         int $options = 0,
         int $depth = 512,
-        array &$errors = []
+        string &$error = ""
     ) : ?string {
         try {
             return $this->jsonEncode($value, $options, $depth);
         } catch (DataModelException $e) {
-            $errors[] = $e->getMessage();
+            $error = $e->getMessage();
             return null;
         }
     }

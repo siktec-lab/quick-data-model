@@ -19,7 +19,7 @@ class FilterBookTwo extends DataModel implements ArrayAccess
 
     #[Attr\DataPoint]
     // Takes from the same DataModel class but its referrring to a different DataModel
-    #[Attr\Filter(ref : "#name")]
+    #[Attr\Filter(ref : "::name")]
     public string $author = "";
 
     #[Attr\DataPoint]

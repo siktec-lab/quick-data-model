@@ -18,20 +18,34 @@ class Filter extends ReferableDataModelAttr
      */
     final public static function execFilter(mixed $callable, array $args, array|string $types) : array
     {
+        $success = true;
+        $return = null;
+
         try {
-            $value = call_user_func_array($callable, $args);
-            $type = self::typeName(gettype($value));
-            $valid = empty($types) || in_array(
-                $type,
-                is_string($types) ? self::typesArrayFromString($types) : $types
-            );
-            return [
-                $valid,
-                $valid ? $value : "Invalid return type {$type}' from filter"
-            ];
+            $return = $callable(...$args);
+            $type = self::typeName(gettype($return));
+            if (
+                !empty($types) && 
+                !in_array($type, is_string($types) ? self::typesArrayFromString($types) : $types)
+            ) {
+                $return = "Invalid return type {$type}' from filter";
+                $success = false;
+            }
         } catch (Throwable $th) {
-            return [false, "Filter failed with error '{$th->getMessage()}'"];
+            $success = false;
+            $return = "Filter failed with internal error";
+            // Emit a warning this should not happen:
+            trigger_error(
+                sprintf(
+                    "Filter failed with internal error '%s' in %s on line %d",
+                    $th->getMessage(),
+                    $th->getFile(),
+                    $th->getLine()
+                ),
+                E_USER_WARNING
+            );
         }
+        return [$success, $return];
     }
 
     /**
@@ -55,12 +69,17 @@ class Filter extends ReferableDataModelAttr
             $args   = $filter->args;
             $types  = $filter->types;
 
+            // TODO: what happens if the method is self :: ? check that ASAP
             // Check if filter is callable
             $call_filter = Filter::isCallable($method);
 
             if ($call_filter === false) {
                 $name = is_array($method) ? implode("::", $method) : $method;
-                $errors[] = "Filter '{$name}' is not callable";
+                $filter->qdmAppendError(
+                    $filter->parent_data_point_name,
+                    "Filter '{$name}' is not callable",
+                    $errors
+                );
                 return false;
             }
 
@@ -72,7 +91,11 @@ class Filter extends ReferableDataModelAttr
 
             // Check if filter was applied successfully
             if (!$status) {
-                $errors[] = $after;
+                $filter->qdmAppendError(
+                    $filter->parent_data_point_name,
+                    $after,
+                    $errors
+                );
                 return false;
             }
 
@@ -108,7 +131,7 @@ class Filter extends ReferableDataModelAttr
         public string|array $types = "mixed",
         public string|array|null $ref = null
     ) {
-
+        //TODO: we should do this only if its not a reference.
         $this->args = self::placeMarkerInArgs($value_pos, $this->args);
         $this->types = is_string($this->types) ? self::typesArrayFromString($this->types) : $this->types;
         // Mixed means any type so we set it to an empty array

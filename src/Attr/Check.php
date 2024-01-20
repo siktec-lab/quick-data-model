@@ -5,33 +5,64 @@ declare(strict_types=1);
 namespace QDM\Attr;
 
 use Attribute;
-use Throwable;
+use Exception;
 use QDM\Attr\ReferableDataModelAttr;
+use QDM\Attr\Filters\With;
 
 #[Attribute(Attribute::TARGET_PROPERTY | Attribute::IS_REPEATABLE)]
 class Check extends ReferableDataModelAttr
 {
+
+    const DEFAULT_VALUE_POS     = 0;
+    
+    const DEFAULT_BUILTIN       = With::EQUAL;
+    
+    const DEFAULT_BUILTIN_VALUE = true;
+
+    const DEFAULT_VALIDATION_MESSAGE    = "Not valid";
+
     /**
      * Execute a check
      *
      * @return array{bool,string} Exec success status and the value or error message
      */
-    final public static function execCheck(mixed $callable, array $args, array|string $types) : array
+    final public static function execCheck(string|With $callable, array $args) : array
     {
-        try {
-            $value = call_user_func_array($callable, $args);
-            $type = self::typeName(gettype($value));
-            $valid = empty($types) || in_array(
-                $type,
-                is_string($types) ? self::typesArrayFromString($types) : $types
-            );
-            return [
-                $valid,
-                $valid ? $value : "Invalid return type {$type}' from filter"
-            ];
-        } catch (Throwable $th) {
-            return [false, "Filter failed with error '{$th->getMessage()}'"];
+        $message = "";
+        $valid = false;
+        
+        //Execute:
+        if (is_a($callable, With::class, true)) {
+            //Exec With builtin:
+            $valid = $callable->evaluate(array_shift($args), $args, $message);
+        } else {
+            //Exec callable:
+            try {
+                if ($got = $callable(...$args) !== true) {
+                    $message = is_string($got) ? $got : self::DEFAULT_VALIDATION_MESSAGE;
+                } else {
+                    $valid = true;
+                }
+            } catch (Exception $th) {
+                $valid = false;
+                $message = "Check failed with internal error";
+                // Emit a warning this should not happen:
+                trigger_error(
+                    sprintf(
+                        "Check failed with internal error '%s' in %s on line %d",
+                        $th->getMessage(),
+                        $th->getFile(),
+                        $th->getLine()
+                    ),
+                    E_USER_WARNING
+                );
+            }
         }
+
+        return [
+            $valid, 
+            (!$valid && empty($message)) ? self::DEFAULT_VALIDATION_MESSAGE : $message
+        ];
     }
 
     /**
@@ -44,48 +75,60 @@ class Check extends ReferableDataModelAttr
      * @param array<\QDM\Attr\Check> $checks The checks to apply
      * @param array<string> $errors The errors array to populate
      */
-    final protected static function applyChecks(
-        mixed &$value,
+    final public static function applyChecks(
+        mixed $value,
         array $checks,
         array &$errors = []
     ) : bool {
 
-        // foreach ($filters as $filter) {
-        //     $method = $filter->call;
-        //     $args   = $filter->args;
-        //     $types  = $filter->types;
+        $valid = true;
+        foreach ($checks as $check) {
 
-        //     // Check if filter is callable
-        //     $call_filter = Filter::isCallable($method);
+            // First priority is the builtin:
+            $callable = self::parseWithCheck($check->call);
 
-        //     if ($call_filter === false) {
-        //         $name = is_array($method) ? implode("::", $method) : $method;
-        //         $errors[] = "Filter '{$name}' is not callable";
-        //         return false;
-        //     }
+            // Second priority is the callable:
+            if (is_null($callable)) {
+                $callable = $check->call;
+                if (is_string($check->call) && str_starts_with($check->call, self::SELF_REF)) {
+                    $callable = $check->parent_data_model_name . $callable;
+                }
+                $callable = Check::isCallable($callable);
+            }
 
-        //     // Apply value to the args array
-        //     $args = Filter::applyValueToArgs($value, $args);
+            // If we still don't have a callable then we have an invalid check:
+            if (empty($callable)) {
+                $check->qdmAppendError(
+                    $check->parent_data_point_name,
+                    "Check '{$check->call}' is not callable",
+                    $errors
+                );
+                return false;
+            }
 
-        //     // Execute filter
-        //     [$status, $after] = Filter::execFilter($method, $args, $types);
+            // Apply value to the args array
+            $args = Check::applyValueToArgs($value, $check->args);
 
-        //     // Check if filter was applied successfully
-        //     if (!$status) {
-        //         $errors[] = $after;
-        //         return false;
-        //     }
+            // Execute check
+            [$status, $message] = Check::execCheck($callable, $args);
 
-        //     // Update value
-        //     $value = $after;
-        // }
-        return true;
+            // Check if check was applied successfully
+            if (!$status) {
+                $check->qdmAppendError(
+                    $check->parent_data_point_name,
+                    $message,
+                    $errors
+                );
+                $valid = false;
+            }
+        }
+        return $valid;
     }
 
     /**
      * Describe the filter
      *
-     * return a string representation of the filter definition
+     * return a string representation of the filter definition.
      */
     final public function describe() : string
     {
@@ -93,23 +136,35 @@ class Check extends ReferableDataModelAttr
     }
 
     /**
-     * A filter definition
-     *
-     * @param string|array<string>|callable $call The callable to be used as this check
-     * @param array{string,mixed} $against the comparison operator and the value to be compared against
-     * @param array<mixed> $args The extra arguments to be passed to the check callable
-     * @param int $value_pos the position of the value to be checked in the args array defaults to 0
-     * @param string|array<string> $ref A reference to a data point to inherit its check callable
+     * A Check definition
+     * 
+     * @param QDM\Attr\Filters\With|string|array<string>|null $call the callable to be used or a builtin.
+     * @param array<mixed> $args The extra arguments to be passed to the check callable.
+     * @param int $value_pos the position of the value to be checked in the args array defaults to 0.
+     * @param string|array<string> $ref a reference to a data point to inherit its check callable.
      */
     public function __construct(
-        public string|array|callable $call = "",
-        public array $against = [],
+        public With|string|array|null $call = null,
         public array $args = [],
         int $value_pos = 0,
         public string|array|null $ref = null
     ) {
         // Place the value marker in the args array
-        $this->args = self::placeMarkerInArgs($value_pos, $this->args);
+        if (is_null($ref)) {
+            $this->args = self::placeMarkerInArgs($value_pos, $this->args);
+        }
+    }
+
+    /**
+     * Try to parse a With check
+     */
+    private static function parseWithCheck(With|string|array|null $with) : ?With
+    {
+        return match (true) {
+            is_string($with) => With::tryFrom($with),
+            is_a($with, With::class, true) => $with,
+            default => null
+        };
     }
 
     /**
@@ -117,22 +172,33 @@ class Check extends ReferableDataModelAttr
      */
     final public function __toString() : string
     {
-        $call = is_array($this->call) ? implode("::", $this->call) : $this->call;
-        $args = array_map(
-            fn($arg) => self::argStringable($arg),
-            $this->args
-        );
-        $agains = match (true) {
-            is_array($this->against) && count($this->against) === 2 => 
-                self::argStringable($this->against[0]) . " " . self::argStringable($this->against[1]),
-            default => "true"
+        // Case 1 -> its a reference
+        if (!is_null($this->ref)) {
+            $ref = is_array($this->ref) ? implode("::", $this->ref) : $this->ref;
+            return sprintf("Ref %s", $ref);
+        }
+        // Case 2 -> its a builtin
+        $with = self::parseWithCheck($this->call);
+        if (!is_null($with)) { 
+            return sprintf(
+                "@V %s %s",
+                $with->value,
+                self::argStringable($this->args[1] ?? null)
+            );
+        }
+        // Case 3 -> its a callable
+        return match(true) {
+            str_starts_with($this->call, self::SELF_REF) => sprintf(
+                "%s(%s) is true",
+                $this->call,
+                self::argStringable($this->args[0] ?? null)
+            ),
+            self::isCallable($this->call) => sprintf(
+                "%s(%s) is true",
+                is_array($this->call) ? implode("::", $this->call) : $this->call,
+                self::argStringable($this->args[0] ?? null)
+            ),
+            default => "Invalid Check"
         };
-        //TODO: maybe its a reference to a data point
-        return sprintf(
-            "%s(%s) is %s",
-            $call,
-            implode(",", $args),
-            $agains
-        );
     }
 }

@@ -16,6 +16,7 @@ use QDM\Interfaces\IDataModel;
 class Collection implements IDataModel, Countable, ArrayAccess, Iterator
 {
     use Traits\SafeJsonTrait;
+    use Traits\AppendErrorTrait;
     use Traits\ArrayAccessTrait;
     use Traits\IteratorTrait;
 
@@ -69,7 +70,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
         bool $clone = true
     ) : bool {
         if ($this->has($key)) {
-            $errors[] = "Key already exists";
+            $this->qdmAppendError(message : "Key '{$key}' already exists", to : $errors);
             return false;
         }
         return $this->set($value, $key, $errors, $clone);
@@ -90,7 +91,10 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
 
         // If its not initialized then initialize it:
         if (!$this->is_initialized && !$this->initialize(false)) {
-            $errors[] = "Collection could not be initialized declaration error";
+            $this->qdmAppendError(
+                message : "Collection could not be initialized declaration error", 
+                to : $errors
+            );
             return false;
         }
 
@@ -99,7 +103,10 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
         switch (gettype($value)) {
             case "object":
                 if (!$this->isTypeValid($value)) {
-                    $errors[] = "Value is not supported by this collection type";
+                    $this->qdmAppendError(
+                        message : "Value of '{$key}' is not supported by this collection type", 
+                        to : $errors
+                    );
                     return false;
                 }
                 $type = get_class($value);
@@ -107,7 +114,10 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
             default:
                 // If we have multiple types only allow objects:
                 if (count($this->types) !== 1 || is_null($type)) {
-                    $errors[] = "Collection has multiple types and only objects are allowed";
+                    $this->qdmAppendError(
+                        message : "Collection has multiple types and only objects are allowed", 
+                        to : $errors
+                    );
                     return false;
                 }
                 $clone = true;
@@ -117,7 +127,10 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
         // Build the item:
         $item = $clone ? $this->buildItem($type, $value, $errors) : $value;
         if (is_null($item)) {
-            $errors[] = "Could not build item";
+            $this->qdmAppendError(
+                message : "Could not build collection item", 
+                to : $errors
+            );
             return false;
         }
 
@@ -268,12 +281,15 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
             return $this->fromArray($data->toArray(), $errors);
         }
         if (is_string($data)) {
-            $data = $this->jsonDecodeCatch($data, assoc: true, errors : $errors);
+            $data = $this->jsonDecodeCatch($data, assoc: true);
             if (is_array($data)) {
                 return $this->fromArray($data, $errors);
             }
         }
-        $errors[] = "Data is not a valid type that can be used to extend the collection";
+        $this->qdmAppendError(
+            message : "Collection item is not of a valid type", 
+            to : $errors
+        );
         return false;
     }
 
@@ -383,7 +399,10 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
     {
         // If its not initialized then initialize it:
         if (!$this->is_initialized && !$this->initialize(false)) {
-            $errors[] = "Collection could not be initialized declaration error";
+            $this->qdmAppendError(
+                message : "Collection could not be initialized declaration error", 
+                to : $errors
+            );
             return false;
         }
         $init_errors = count($errors);
@@ -405,11 +424,11 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
      *
      * @throws DataModelException if the collection is not defined properly
      */
-    public function __construct(array|string|object $data = [])
+    public function __construct(array|string|object $data = [], array &$errors = [])
     {
         $this->initialize(true);
         if (!empty($data)) {
-            $this->from($data);
+            $this->from($data, $errors);
         }
     }
 
@@ -466,7 +485,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
     /**
      * Populate a specific data model from an object, array or json string
      *
-     * This assumes the type is valid and will not perform any checks.
+     * This assumes the type is valid and will not perform any type checking
      */
     private function buildItem(string $type, array|string|IDataModel $item, array &$errors = []) : ?IDataModel
     {
@@ -475,13 +494,19 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
             $instance = $reflection->newInstance();
             $status = $instance->from($item, $errors);
             return $status ? $instance : null;
-        } catch (DataModelException $e) {
-            $errors[] = "Could not build item: " . $e->getMessage();
-            return null;
         } catch (Exception $e) {
-            $errors[] = "Could not build item: " . $e->getMessage();
-            return null;
+            // Only raise a warning if the error is not a declaration error:
+            trigger_error(
+                sprintf(
+                    "Could not build item: %s in %s on line %d",
+                    $e->getMessage(),
+                    $e->getFile(),
+                    $e->getLine()
+                ),
+                E_USER_WARNING
+            );
         }
+        return null;
     }
 
     /**
