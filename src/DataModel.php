@@ -12,7 +12,6 @@ use QDM\Interfaces\IDataModel;
 
 abstract class DataModel implements IDataModel
 {
-
     use Traits\SafeJsonTrait;
     use Traits\AppendErrorTrait;
     use Traits\DataPointsTrait;
@@ -53,7 +52,7 @@ abstract class DataModel implements IDataModel
             return $this->fromArray((array)$data, $errors);
         }
         if (is_string($data)) {
-            $data = $this->jsonDecodeCatch($data, assoc: true); 
+            $data = $this->jsonDecodeCatch($data, assoc: true);
             if (is_array($data)) {
                 return $this->fromArray($data, $errors);
             }
@@ -61,7 +60,7 @@ abstract class DataModel implements IDataModel
 
         // If we reached here then we have an error:
         $this->qdmAppendError(
-            message: "Received data is invalid, must be an Array, IDataModel object or JSON string", 
+            message: "Received data is invalid, must be an Array, IDataModel object or JSON string",
             to: $errors
         );
         return false;
@@ -309,7 +308,7 @@ abstract class DataModel implements IDataModel
         if ($dp->required && is_null($value)) {
             $this->qdmAppendError(
                 of : $dp->name,
-                message: "Required DataPoint cannot be null", 
+                message: "Required DataPoint cannot be null",
                 to: $errors
             );
             return false;
@@ -321,7 +320,7 @@ abstract class DataModel implements IDataModel
             if (!is_array($value) && !is_object($value) && !is_string($value)) {
                 $this->qdmAppendError(
                     of : $dp->name,
-                    message: "Value for nested DataPoint must be an Array, IDataModel object or JSON string", 
+                    message: "Value for nested DataPoint must be an Array, IDataModel object or JSON string",
                     to: $errors
                 );
                 return false;
@@ -329,10 +328,10 @@ abstract class DataModel implements IDataModel
             // Build the data model:
             $dm = new $dp->types[0]();
             $nested_errors = []; // Report back the errors
-            if (!$dm->from($value, $nested_errors)) { 
+            if (!$dm->from($value, $nested_errors)) {
                 $this->qdmAppendError(
-                    of : $dp->name, 
-                    message : $nested_errors, 
+                    of : $dp->name,
+                    message : $nested_errors,
                     to :$errors
                 );
                 return false;
@@ -366,7 +365,7 @@ abstract class DataModel implements IDataModel
         ) {
             return false;
         }
-        
+
         // Set the value:
         $this->{$name} = $value;
         return true;

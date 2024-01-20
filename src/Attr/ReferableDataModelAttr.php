@@ -23,7 +23,6 @@ use QDM\Traits\AppendErrorTrait;
  */
 abstract class ReferableDataModelAttr extends BaseAttr
 {
-
     use AppendErrorTrait;
 
     /**
@@ -37,15 +36,6 @@ abstract class ReferableDataModelAttr extends BaseAttr
     public const SELF_REF = "::";
 
     /**
-     * A cache of referable attributes
-     *
-     * This is used to avoid having to re-fetch the referable attributes for a given class
-     * Key: Attribute::class . "::" . Class::class . "::" . Property::class
-     * @var array<string,array<\QDM\Attr\ReferableDataModelActionAttribute>> The collected cached Attributes
-     */
-    protected static $cache = [];
-
-    /**
      * The parent DataModel class name
      */
     public string $parent_data_model_name = "";
@@ -54,6 +44,16 @@ abstract class ReferableDataModelAttr extends BaseAttr
      * The parent DataPoint name
      */
     public string $parent_data_point_name = "";
+
+
+    /**
+     * A cache of referable attributes
+     *
+     * This is used to avoid having to re-fetch the referable attributes for a given class
+     * Key: Attribute::class . "::" . Class::class . "::" . Property::class
+     * @var array<string,array<\QDM\Attr\ReferableDataModelActionAttribute>> The collected cached Attributes
+     */
+    protected static $cache = [];
 
     /**
      * Check if a callable is valid and return the full callable
@@ -230,7 +230,7 @@ abstract class ReferableDataModelAttr extends BaseAttr
     {
         return match (true) {
             $arg === self::VALUE_MARKER => "@V",
-            is_numeric($arg) || (is_string($arg) && strlen($arg) <= 15 && !empty(trim($arg))) => 
+            is_numeric($arg) || (is_string($arg) && strlen($arg) <= 15 && !empty(trim($arg))) =>
                 is_string($arg)
                     ? str_replace(
                         [ "\n", "\r", "\t", "\v", "\f" ],
@@ -243,5 +243,4 @@ abstract class ReferableDataModelAttr extends BaseAttr
             default => gettype($arg),
         };
     }
-
 }

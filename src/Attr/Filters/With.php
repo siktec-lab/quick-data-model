@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace QDM\Attr\Filters;
 
-enum With: string {
-
+enum With: string
+{
     // All the filters:
     case EQUAL_STRICT = "===";
     case EQUAL = "==";
@@ -76,7 +78,7 @@ enum With: string {
     case IS_SPACE = "is_space";
     case IS_NOT_SPACE = "is_not_space";
     case IS_XDIGIT = "is_xdigit";
-    case IS_NOT_XDIGIT = "is_not_xdigit";   
+    case IS_NOT_XDIGIT = "is_not_xdigit";
     case IS_PRINT = "is_print";
     case IS_NOT_PRINT = "is_not_print";
     case IS_GRAPH = "is_graph";
@@ -171,7 +173,7 @@ enum With: string {
         return $valid;
     }
 
-    public function createErrorMessage(mixed $args) : string 
+    public function createErrorMessage(mixed $args) : string
     {
         $str = match (true) {
             is_array($args) => json_encode($args),

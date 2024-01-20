@@ -25,7 +25,7 @@ class Filter extends ReferableDataModelAttr
             $return = $callable(...$args);
             $type = self::typeName(gettype($return));
             if (
-                !empty($types) && 
+                !empty($types) &&
                 !in_array($type, is_string($types) ? self::typesArrayFromString($types) : $types)
             ) {
                 $return = "Invalid return type {$type}' from filter";

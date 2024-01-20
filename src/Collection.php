@@ -92,7 +92,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
         // If its not initialized then initialize it:
         if (!$this->is_initialized && !$this->initialize(false)) {
             $this->qdmAppendError(
-                message : "Collection could not be initialized declaration error", 
+                message : "Collection could not be initialized declaration error",
                 to : $errors
             );
             return false;
@@ -104,7 +104,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
             case "object":
                 if (!$this->isTypeValid($value)) {
                     $this->qdmAppendError(
-                        message : "Value of '{$key}' is not supported by this collection type", 
+                        message : "Value of '{$key}' is not supported by this collection type",
                         to : $errors
                     );
                     return false;
@@ -115,7 +115,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
                 // If we have multiple types only allow objects:
                 if (count($this->types) !== 1 || is_null($type)) {
                     $this->qdmAppendError(
-                        message : "Collection has multiple types and only objects are allowed", 
+                        message : "Collection has multiple types and only objects are allowed",
                         to : $errors
                     );
                     return false;
@@ -128,7 +128,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
         $item = $clone ? $this->buildItem($type, $value, $errors) : $value;
         if (is_null($item)) {
             $this->qdmAppendError(
-                message : "Could not build collection item", 
+                message : "Could not build collection item",
                 to : $errors
             );
             return false;
@@ -287,7 +287,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
             }
         }
         $this->qdmAppendError(
-            message : "Collection item is not of a valid type", 
+            message : "Collection item is not of a valid type",
             to : $errors
         );
         return false;
@@ -400,7 +400,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
         // If its not initialized then initialize it:
         if (!$this->is_initialized && !$this->initialize(false)) {
             $this->qdmAppendError(
-                message : "Collection could not be initialized declaration error", 
+                message : "Collection could not be initialized declaration error",
                 to : $errors
             );
             return false;

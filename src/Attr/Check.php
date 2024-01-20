@@ -12,14 +12,13 @@ use QDM\Attr\Filters\With;
 #[Attribute(Attribute::TARGET_PROPERTY | Attribute::IS_REPEATABLE)]
 class Check extends ReferableDataModelAttr
 {
+    public const DEFAULT_VALUE_POS          = 0;
 
-    const DEFAULT_VALUE_POS     = 0;
-    
-    const DEFAULT_BUILTIN       = With::EQUAL;
-    
-    const DEFAULT_BUILTIN_VALUE = true;
+    public const DEFAULT_BUILTIN            = With::EQUAL;
 
-    const DEFAULT_VALIDATION_MESSAGE    = "Not valid";
+    public const DEFAULT_BUILTIN_VALUE      = true;
+
+    public const DEFAULT_VALIDATION_MESSAGE = "Not valid";
 
     /**
      * Execute a check
@@ -30,7 +29,7 @@ class Check extends ReferableDataModelAttr
     {
         $message = "";
         $valid = false;
-        
+
         //Execute:
         if (is_a($callable, With::class, true)) {
             //Exec With builtin:
@@ -60,7 +59,7 @@ class Check extends ReferableDataModelAttr
         }
 
         return [
-            $valid, 
+            $valid,
             (!$valid && empty($message)) ? self::DEFAULT_VALIDATION_MESSAGE : $message
         ];
     }
@@ -83,7 +82,6 @@ class Check extends ReferableDataModelAttr
 
         $valid = true;
         foreach ($checks as $check) {
-
             // First priority is the builtin:
             $callable = self::parseWithCheck($check->call);
 
@@ -137,7 +135,7 @@ class Check extends ReferableDataModelAttr
 
     /**
      * A Check definition
-     * 
+     *
      * @param QDM\Attr\Filters\With|string|array<string>|null $call the callable to be used or a builtin.
      * @param array<mixed> $args The extra arguments to be passed to the check callable.
      * @param int $value_pos the position of the value to be checked in the args array defaults to 0.
@@ -179,7 +177,7 @@ class Check extends ReferableDataModelAttr
         }
         // Case 2 -> its a builtin
         $with = self::parseWithCheck($this->call);
-        if (!is_null($with)) { 
+        if (!is_null($with)) {
             return sprintf(
                 "@V %s %s",
                 $with->value,
@@ -187,7 +185,7 @@ class Check extends ReferableDataModelAttr
             );
         }
         // Case 3 -> its a callable
-        return match(true) {
+        return match (true) {
             str_starts_with($this->call, self::SELF_REF) => sprintf(
                 "%s(%s) is true",
                 $this->call,

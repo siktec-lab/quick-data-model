@@ -20,7 +20,7 @@ class FilterBookThree extends DataModel implements ArrayAccess
       Attr\Filter("strtolower"),
       Attr\Filter("ucwords", args: [" .\t\r\n\f\v"])
     ]
-    #[Attr\Check("::is_ucfirst")]
+    #[Attr\Check("::isUcFirst")]
     public ?string $name = null;
 
     #[Attr\DataPoint]
@@ -38,13 +38,13 @@ class FilterBookThree extends DataModel implements ArrayAccess
 
     #[Attr\DataPoint]
     #[Attr\Filter("trim")]
-    #[Attr\Check("::is_ucfirst")]
+    #[Attr\Check("::isUcFirst")]
     #[Attr\Check(With::MIN_LENGTH, args: [ 5 ])]
     public string $publisher = "";
 
-    public static function is_ucfirst(string $value) : bool|string
+    public static function isUcFirst(string $value) : bool|string
     {
-      return $value[0] === strtoupper($value[0])
+        return $value[0] === strtoupper($value[0])
         ? true
         : "Must start with uppercase letter";
     }
