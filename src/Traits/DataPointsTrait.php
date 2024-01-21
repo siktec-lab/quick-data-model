@@ -31,7 +31,7 @@ trait DataPointsTrait
      * return all DataPoints names
      * @return array<string>
      */
-    final protected function getDataPointsNames() : array
+    final protected function qdmGetDataPointsNames() : array
     {
         return array_keys($this->qdm_data_points);
     }
@@ -39,7 +39,7 @@ trait DataPointsTrait
     /**
      * return a DataPoint by key name or position
      */
-    final protected function getDataPoint(string|int $key) : ?DataPoint
+    final protected function qdmGetDataPoint(string|int $key) : ?DataPoint
     {
         return is_int($key)
             ? $this->qdm_data_points[$this->qdm_data_point_index[$key]] ?? null
@@ -49,7 +49,7 @@ trait DataPointsTrait
     /**
      * Saves an extra key value if extra data point is set
      */
-    final protected function saveExtraValue(string|int $key, mixed $value, bool $import = false) : bool
+    final protected function qdmSaveExtraValue(string|int $key, mixed $value, bool $import = false) : bool
     {
         if (
             $this->qdm_extra_data && // If it has an extra data point
@@ -67,7 +67,7 @@ trait DataPointsTrait
      *
      * @throws DataModelException if the a DataPoint declaration is invalid
      */
-    private function buildDataPoint(ReflectionProperty $property, int $position) : bool
+    final protected function qdmBuildDataPoint(ReflectionProperty $property, int $position) : bool
     {
 
         $attributes = $property->getAttributes(DataPoint::class);
@@ -120,8 +120,16 @@ trait DataPointsTrait
      * Builds the data point index for easier access by position
      * Usefull while exporting data
      */
-    private function buildDataPointIndex() : void
+    final protected function qdmBuildDataPointIndex() : void
     {
         $this->qdm_data_point_index = array_column($this->qdm_data_points, "name", "position");
+    }
+
+    /** 
+     * A helper method to validate a data point requiredness
+     */
+    final protected function qdmValidateRequiredDataPoint(DataPoint $dp, mixed $value) : bool
+    {
+        return !$dp->required ?: !is_null($value);
     }
 }

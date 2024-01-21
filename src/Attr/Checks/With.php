@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace QDM\Attr\Filters;
+namespace QDM\Attr\Checks;
 
 enum With: string
 {

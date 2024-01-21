@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace QDM\Tests\Models\Books;
 
 use QDM\Attr;
-use QDM\Attr\Filters\With;
+use QDM\Attr\Checks\With;
 use QDM\DataModel;
 use QDM\Traits;
 use ArrayAccess;
@@ -44,6 +44,9 @@ class FilterBookThree extends DataModel implements ArrayAccess
 
     public static function isUcFirst(string $value) : bool|string
     {
+        if (empty($value)) {
+            return false;
+        }
         return $value[0] === strtoupper($value[0])
         ? true
         : "Must start with uppercase letter";

@@ -95,6 +95,15 @@ class FiltersBasicTest extends TestCase
         ], $book->toArray());
     }
 
+    public function testFiltersWhenArrayAccess() : void 
+    {
+        $book = new Models\Books\FilterBookOne();
+        $book["name"] = "     harry potter and the philosopher's stone   ";
+        $book["author"] = "   j.k. rowling   ";
+
+        $this->assertEquals("Harry Potter And The Philosopher's Stone", $book["name"]);
+        $this->assertEquals("J.K. Rowling", $book["author"]);
+    }
     public static function setUpBeforeClass() : void
     {
         return;

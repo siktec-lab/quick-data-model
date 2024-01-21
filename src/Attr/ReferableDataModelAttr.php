@@ -45,7 +45,6 @@ abstract class ReferableDataModelAttr extends BaseAttr
      */
     public string $parent_data_point_name = "";
 
-
     /**
      * A cache of referable attributes
      *
@@ -193,6 +192,14 @@ abstract class ReferableDataModelAttr extends BaseAttr
         // Save the referable attributes:
         self::$cache[$cache_key] = $collect;
         array_push($collected, ...$collect);
+    }
+
+    /**
+     * Clear the cache
+     */
+    final public static function clearCache() : void
+    {
+        self::$cache = [];
     }
 
     /**

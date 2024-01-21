@@ -7,7 +7,7 @@ namespace QDM\Attr;
 use Attribute;
 use Exception;
 use QDM\Attr\ReferableDataModelAttr;
-use QDM\Attr\Filters\With;
+use QDM\Attr\Checks\With;
 
 #[Attribute(Attribute::TARGET_PROPERTY | Attribute::IS_REPEATABLE)]
 class Check extends ReferableDataModelAttr
@@ -136,7 +136,7 @@ class Check extends ReferableDataModelAttr
     /**
      * A Check definition
      *
-     * @param QDM\Attr\Filters\With|string|array<string>|null $call the callable to be used or a builtin.
+     * @param QDM\Attr\Checks\With|string|array<string>|null $call the callable to be used or a builtin.
      * @param array<mixed> $args The extra arguments to be passed to the check callable.
      * @param int $value_pos the position of the value to be checked in the args array defaults to 0.
      * @param string|array<string> $ref a reference to a data point to inherit its check callable.

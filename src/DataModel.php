@@ -14,6 +14,7 @@ abstract class DataModel implements IDataModel
 {
     use Traits\SafeJsonTrait;
     use Traits\AppendErrorTrait;
+    use Traits\AutoInitializeTrait;
     use Traits\DataPointsTrait;
     use Traits\FiltersTrait;
     use Traits\ChecksTrait;
@@ -81,9 +82,9 @@ abstract class DataModel implements IDataModel
         $datapoints = array_filter($datapoints, fn($name) => $this->has($name));
 
         // Revert to the default value of the data points:
-        $revert = count($datapoints) ? $datapoints : $this->getDataPointsNames();
+        $revert = count($datapoints) ? $datapoints : $this->qdmGetDataPointsNames();
         foreach ($revert as $name) {
-            $this->{$name} = $this->getDataPoint($name)?->default;
+            $this->{$name} = $this->qdmGetDataPoint($name)?->default;
         }
     }
 
@@ -92,7 +93,7 @@ abstract class DataModel implements IDataModel
      */
     final public function has(string $name, bool $export = false, bool $import = false) : bool
     {
-        $dp = $this->getDataPoint($name);
+        $dp = $this->qdmGetDataPoint($name);
         if (is_null($dp)) {
             return false;
         }
@@ -110,11 +111,66 @@ abstract class DataModel implements IDataModel
      */
     final public function get(string $name, bool $export = false) : mixed
     {
-        $dp = $this->getDataPoint($name);
+        $dp = $this->qdmGetDataPoint($name);
         if (is_null($dp)) {
             return null;
         }
         return !$export ? $this->{$name} : ($dp->export ? $this->{$name} : null);
+    }
+
+    /**
+     * Validate the data model "manually"
+     * Will perform:
+     *  - Required checks
+     *  - Custom checks that are defined in the data points
+     * 
+     * Will not perform:
+     *  - Type checks they always performed when setting a value
+    */
+    final public function validate(array &$errors = []) : bool
+    {
+        // Auto initialize the data model:
+        if (!$this->qdmAutoInitialize($errors, throw: false)) {
+            return false;
+        }
+
+        // Loop through the data points:
+        $valid = true;
+        foreach ($this->qdm_data_points as $dp) {
+
+            // If its required and its null then we have an error:
+            if (!$this->qdmValidateRequiredDataPoint($dp, $this->{$dp->name})) {
+                $this->qdmAppendError(of: $dp->name, message: "Required DataPoint cannot be null", to: $errors);
+                $valid = false;
+            }
+
+            // Its a nested data model:
+            if ($dp->is_data_model) {
+                // We only validate if the data model is not null:
+                if (!is_null($this->{$dp->name})) {
+                    // Validate the nested data model:
+                    $nested_errors = []; // Report back the errors
+                    if (!$this->{$dp->name}->validate($nested_errors)) {
+                        $this->qdmAppendError(
+                            of : $dp->name,
+                            message : $nested_errors,
+                            to :$errors
+                        );
+                        $valid = false;
+                    }
+                }
+                continue;
+            }
+
+            // Apply the custom check if any:
+            if (
+                $this->qdmHasChecks($dp->name) &&
+                !Attr\Check::applyChecks($this->{$dp->name}, $this->qdmGetChecks($dp->name), $errors)
+            ) {
+                $valid = false;
+            }
+        }
+        return $valid;
     }
 
     /**
@@ -123,8 +179,8 @@ abstract class DataModel implements IDataModel
      */
     final public function toArray() : array
     {
-        // If its not initialized then initialize it:
-        if (!$this->is_initialized && !$this->initialize(false)) {
+
+        if (!$this->qdmAutoInitialize(throw: false)) {
             return [];
         }
 
@@ -197,7 +253,7 @@ abstract class DataModel implements IDataModel
     final public function describe(array &$found_nested = []) : array
     {
         // Check if initialized otherwise initialize it:
-        if (!$this->is_initialized && !$this->initialize(false)) {
+        if (!$this->qdmAutoInitialize(throw: false)) {
             return [];
         }
 
@@ -210,10 +266,10 @@ abstract class DataModel implements IDataModel
                 [
                     // TODO: Add setter and getter checks...
                     // TODO: Add model scope applied actions
-                    "filters" => $filters ?: null,
-                    "checks" => $checks ?: null,
-                    "setter" => "TODO",
-                    "getter" => "TODO",
+                    "filters"   => $filters ?: null,
+                    "checks"    => $checks ?: null,
+                    "setter"    => "TODO",
+                    "getter"    => "TODO",
                 ]
             );
         }
@@ -227,18 +283,18 @@ abstract class DataModel implements IDataModel
      */
     final protected function fromArray(array $data, array &$errors = []) : bool
     {
-        // If its not initialized then initialize it:
-        if (!$this->is_initialized && !$this->initialize(false)) {
-            $this->qdmAppendError(message: "DataModel could not be initialized declaration error", to: $errors);
+        // Auto initialize the data model:
+        if (!$this->qdmAutoInitialize($errors, throw: false)) {
             return false;
         }
-        $dps = $this->getDataPointsNames();
+
+        $dps = $this->qdmGetDataPointsNames();
         $valid = true;
         // Loop through the data:
         foreach ($data as $key => $value) {
             if (!in_array($key, $dps)) {
                 // We call this manually because we want to avoid unnecessary checks and errors:
-                $this->saveExtraValue($key, $value, import: true);
+                $this->qdmSaveExtraValue($key, $value, import: true);
                 continue;
             }
             if (!$this->set($value, $key, $errors, import: true)) {
@@ -272,17 +328,16 @@ abstract class DataModel implements IDataModel
          */
     public function set(mixed $value, string $name, array &$errors = [], bool $import = false) : bool
     {
-        // If its not initialized then initialize it:
-        if (!$this->is_initialized && !$this->initialize(false)) {
-            $this->qdmAppendError(message: "DataModel could not be initialized declaration error", to: $errors);
+        // Auto initialize the data model:
+        if (!$this->qdmAutoInitialize($errors, throw: false)) {
             return false;
         }
 
         // Get the data point:
-        $dp = $this->getDataPoint($name);
+        $dp = $this->qdmGetDataPoint($name);
         if (is_null($dp)) {
             // If its an extra data point then save it:
-            if (!$this->saveExtraValue($name, $value, $import)) {
+            if (!$this->qdmSaveExtraValue($name, $value, $import)) {
                 $this->qdmAppendError(message: "DataPoint '{$name}' does not exist", to: $errors);
                 return false;
             }
@@ -296,6 +351,7 @@ abstract class DataModel implements IDataModel
         }
 
         // Apply the custom filter if any:
+        // Filters are always applied no matter what, import or not.
         if (
             $this->qdmHasFilters($dp->name) &&
             !Attr\Filter::applyFilters($value, $this->qdmGetFilters($dp->name), $errors)
@@ -305,12 +361,8 @@ abstract class DataModel implements IDataModel
         }
 
         // If its required and its null then we have an error:
-        if ($dp->required && is_null($value)) {
-            $this->qdmAppendError(
-                of : $dp->name,
-                message: "Required DataPoint cannot be null",
-                to: $errors
-            );
+        if (!$this->qdmValidateRequiredDataPoint($dp, $value)) {
+            $this->qdmAppendError(of: $dp->name, message: "Required DataPoint cannot be null", to: $errors);
             return false;
         }
 
@@ -325,6 +377,7 @@ abstract class DataModel implements IDataModel
                 );
                 return false;
             }
+
             // Build the data model:
             $dm = new $dp->types[0]();
             $nested_errors = []; // Report back the errors
@@ -360,6 +413,7 @@ abstract class DataModel implements IDataModel
 
         // Apply the custom check if any:
         if (
+            $import &&
             $this->qdmHasChecks($dp->name) &&
             Attr\Check::applyChecks($value, $this->qdmGetChecks($dp->name), $errors) !== true
         ) {
@@ -382,7 +436,7 @@ abstract class DataModel implements IDataModel
         $reflection_class  = new ReflectionClass($this);
         foreach ($reflection_class->getProperties() as $property) {
             // Data point:
-            if ($this->buildDataPoint($property, $property_position)) {
+            if ($this->qdmBuildDataPoint($property, $property_position)) {
                 // Parse the filters for the data point:
                 $this->qdmBuildFilters($property);
                 // Parse the checks for the data point:
@@ -392,7 +446,7 @@ abstract class DataModel implements IDataModel
             }
         }
         // Build the data point index:
-        $this->buildDataPointIndex();
+        $this->qdmBuildDataPointIndex();
     }
 
     /**

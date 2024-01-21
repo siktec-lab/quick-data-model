@@ -17,6 +17,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
 {
     use Traits\SafeJsonTrait;
     use Traits\AppendErrorTrait;
+    use Traits\AutoInitializeTrait;
     use Traits\ArrayAccessTrait;
     use Traits\IteratorTrait;
 
@@ -89,12 +90,8 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
         bool $clone = true
     ) : bool {
 
-        // If its not initialized then initialize it:
-        if (!$this->is_initialized && !$this->initialize(false)) {
-            $this->qdmAppendError(
-                message : "Collection could not be initialized declaration error",
-                to : $errors
-            );
+        // Auto initialize the collection:
+        if (!$this->qdmAutoInitialize($errors, throw: false)) {
             return false;
         }
 
@@ -344,6 +341,37 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
     }
 
     /**
+     * Validate the data model "manually"
+     * Will perform:
+     *  - Required checks
+     *  - Custom checks that are defined in the data points
+     * 
+     * Will not perform:
+     *  - Type checks they always performed when setting a value
+    */
+    final public function validate(array &$errors = []) : bool
+    {
+        // Auto initialize the collection:
+        if (!$this->qdmAutoInitialize($errors, throw: false)) {
+            return false;
+        }
+
+        // Validate the items:
+        $valid = true;
+        foreach ($this->items as $key => $item) {
+            $inner_errors = [];
+            if (!$item->validate($inner_errors)) {
+                $this->qdmAppendError(
+                    of      : (string)$key,
+                    message : $inner_errors,
+                    to      : $errors
+                );
+                $valid = false;
+            }
+        }
+        return $valid;
+    }
+    /**
      * Convert the collection to an array
      *
      * This will convert the collection to an array of arrays while converting the items to arrays
@@ -352,8 +380,8 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
      */
     final public function toArray() : array
     {
-        // If its not initialized then initialize it:
-        if (!$this->is_initialized && !$this->initialize(false)) {
+        // Auto initialize the collection:
+        if (!$this->qdmAutoInitialize(throw: false)) {
             return [];
         }
         // Build the array:
@@ -397,12 +425,8 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
      */
     final protected function fromArray(array $data, array &$errors = []) : bool
     {
-        // If its not initialized then initialize it:
-        if (!$this->is_initialized && !$this->initialize(false)) {
-            $this->qdmAppendError(
-                message : "Collection could not be initialized declaration error",
-                to : $errors
-            );
+        // Auto initialize the collection:
+        if (!$this->qdmAutoInitialize($errors, throw: false)) {
             return false;
         }
         $init_errors = count($errors);
