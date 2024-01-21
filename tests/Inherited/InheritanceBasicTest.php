@@ -28,7 +28,7 @@ class InheritanceBasicTest extends TestCase
 
         $errors3 = [];
         $status3 = $book3->from([
-            "name" => "   harry potter and the philosopher's stone   ",            
+            "name" => "   harry potter and the philosopher's stone   ",
             "author" => "   j.k. rowling   ",
             "co_author" => "   me and you   ",
             "publisher" => "   BLOOMSBURY   ",
@@ -42,7 +42,6 @@ class InheritanceBasicTest extends TestCase
         $this->assertEmpty($errors3);
         $this->assertEmpty($errors4);
         $this->assertEquals($book3->toArray(), $book4->toArray());
-
     }
 
     public static function setUpBeforeClass() : void

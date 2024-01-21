@@ -15,8 +15,9 @@ trait AutoInitializeTrait
         if (!$this->is_initialized && !$this->initialize($throw)) {
             $this->qdmAppendError(
                 of : "errors",
-                message: "Could not initialize - declaration errors", 
-                to: $errors);
+                message: "Could not initialize - declaration errors",
+                to: $errors
+            );
             return false;
         }
         return true;

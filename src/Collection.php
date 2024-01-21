@@ -345,7 +345,7 @@ class Collection implements IDataModel, Countable, ArrayAccess, Iterator
      * Will perform:
      *  - Required checks
      *  - Custom checks that are defined in the data points
-     * 
+     *
      * Will not perform:
      *  - Type checks they always performed when setting a value
     */

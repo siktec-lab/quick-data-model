@@ -7,6 +7,7 @@ namespace QDM\Tests\Models\Cars;
 use QDM\Attr;
 use QDM\DataModel;
 use QDM\Tests\Models;
+
 class CarLot extends DataModel
 {
     #[Attr\DataPoint]

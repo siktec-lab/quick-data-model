@@ -41,10 +41,10 @@ interface IDataModel extends Stringable
      * Will perform:
      *  - Required checks
      *  - Custom checks that are defined in the data points
-     * 
+     *
      * Will not perform:
      *  - Type checks they always performed when setting a value
-    */
+     */
     public function validate(array &$errors = []) : bool;
 
     /**

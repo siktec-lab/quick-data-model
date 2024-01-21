@@ -123,7 +123,7 @@ abstract class DataModel implements IDataModel
      * Will perform:
      *  - Required checks
      *  - Custom checks that are defined in the data points
-     * 
+     *
      * Will not perform:
      *  - Type checks they always performed when setting a value
     */
@@ -137,7 +137,6 @@ abstract class DataModel implements IDataModel
         // Loop through the data points:
         $valid = true;
         foreach ($this->qdm_data_points as $dp) {
-
             // If its required and its null then we have an error:
             if (!$this->qdmValidateRequiredDataPoint($dp, $this->{$dp->name})) {
                 $this->qdmAppendError(of: $dp->name, message: "Required DataPoint cannot be null", to: $errors);

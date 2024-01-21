@@ -41,7 +41,7 @@ trait ChecksTrait
     final protected function qdmBuildChecks(ReflectionProperty $property) : void
     {
         $this->property_checks[$property->getName()] = [];
-        
+
         // Uses a cache system to avoid having to re-fetch the checks for a given class
         Check::buildAttributes(
             Check::class,

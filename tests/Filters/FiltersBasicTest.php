@@ -95,7 +95,7 @@ class FiltersBasicTest extends TestCase
         ], $book->toArray());
     }
 
-    public function testFiltersWhenArrayAccess() : void 
+    public function testFiltersWhenArrayAccess() : void
     {
         $book = new Models\Books\FilterBookOne();
         $book["name"] = "     harry potter and the philosopher's stone   ";

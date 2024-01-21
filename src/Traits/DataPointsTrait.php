@@ -125,7 +125,7 @@ trait DataPointsTrait
         $this->qdm_data_point_index = array_column($this->qdm_data_points, "name", "position");
     }
 
-    /** 
+    /**
      * A helper method to validate a data point requiredness
      */
     final protected function qdmValidateRequiredDataPoint(DataPoint $dp, mixed $value) : bool
