@@ -21,7 +21,7 @@ class ExportImportVisTest extends TestCase
 
     public function testBasicVisibility() : void
     {
-        $car = new Models\SimpleCar();
+        $car = new Models\Cars\SimpleCar();
         $errors = [];
         $status = $car->from([
             "brand"     => "Toyota",    // Will be updated & exported
@@ -47,7 +47,7 @@ class ExportImportVisTest extends TestCase
 
     public function testVisibilityWithDirectMethods() : void
     {
-        $car = new Models\SimpleCar();
+        $car = new Models\Cars\SimpleCar();
         $car->from([
             "brand"     => "Toyota",    // Will be updated & exported
             "model"     => "Corolla",   // Will be updated & exported

@@ -6,7 +6,6 @@ namespace QDM\Tests\Checks;
 
 use PHPUnit\Framework\TestCase;
 use QDM\Tests\Models;
-use SebastianBergmann\Type\VoidType;
 
 class ChecksBasicTest extends TestCase
 {

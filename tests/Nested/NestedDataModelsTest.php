@@ -21,7 +21,7 @@ class NestedDataModelsTest extends TestCase
 
     public function testBasicNestedElementFromArray() : void
     {
-        $car = new Models\MediumCar();
+        $car = new Models\Cars\MediumCar();
         $errors = [];
         $status = $car->from([
             "brand"     => "Toyota",
@@ -41,14 +41,14 @@ class NestedDataModelsTest extends TestCase
 
     public function testBasicNestedElementFromObject() : void
     {
-        $old_model = new Models\SimpleCar();
+        $old_model = new Models\Cars\SimpleCar();
         $old_model->from([
             "brand"     => "Toyota",
             "model"     => "Corolla S",
             "year"      => 2008,
             "owner"     => "John Doe"
         ]);
-        $car = new Models\MediumCar();
+        $car = new Models\Cars\MediumCar();
 
         $errors = [];
         $status = $car->from([
@@ -79,7 +79,7 @@ class NestedDataModelsTest extends TestCase
     {
 
         // Test nullable:
-        $two = new Models\TwoModel(); // Has a nullable OneModel
+        $two = new Models\General\TwoModel(); // Has a nullable OneModel
         $status = $two->from([
             "value" => "two"
         ]);
@@ -90,7 +90,7 @@ class NestedDataModelsTest extends TestCase
         $this->assertNull($data["one"]);
 
         // Same test but with a one intialized:
-        $two = new Models\TwoModel();
+        $two = new Models\General\TwoModel();
         $status = $two->from([
             "value" => "V2",
             "one" => [ "value" => "V1" ]
@@ -109,7 +109,7 @@ class NestedDataModelsTest extends TestCase
 
     public function testMultipleNestedModels() : void
     {
-        $three = new Models\ThreeModel();
+        $three = new Models\General\ThreeModel();
         $status = $three->from([
             "value" => "V3",
             "one" => [

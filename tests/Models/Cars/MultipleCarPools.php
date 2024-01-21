@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace QDM\Tests\Models;
+namespace QDM\Tests\Models\Cars;
 
 use QDM\Attr;
 use QDM\Collection;

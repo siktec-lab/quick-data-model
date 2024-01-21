@@ -21,7 +21,7 @@ final class ArrayAceesTest extends TestCase
 
     public function testArrayGetExists() : void
     {
-        $human = new Models\MediumHuman();
+        $human = new Models\Humans\MediumHuman();
         $human->from([
             "name"      => "Marry Jane",
             "age"       => 20,
@@ -38,7 +38,7 @@ final class ArrayAceesTest extends TestCase
 
     public function testArrayIsset() : void
     {
-        $human = new Models\MediumHuman();
+        $human = new Models\Humans\MediumHuman();
         $human->from([
             "name"      => "Marry Jane",
             "age"       => 20,
@@ -54,7 +54,7 @@ final class ArrayAceesTest extends TestCase
 
     public function testArrayEmpty() : void
     {
-        $human = new Models\MediumHuman();
+        $human = new Models\Humans\MediumHuman();
         $human->from([
             "name"      => "Marry Jane",
             "age"       => 20,
@@ -71,7 +71,7 @@ final class ArrayAceesTest extends TestCase
 
     public function testArraySet() : void
     {
-        $human = new Models\MediumHuman();
+        $human = new Models\Humans\MediumHuman();
         $human->from([
             "name"      => "Marry Jane",
             "age"       => 20,
@@ -103,7 +103,7 @@ final class ArrayAceesTest extends TestCase
     public function testArrayUnset() : void
     {
         // Unset is actually setting the value to default
-        $human = new Models\MediumHuman();
+        $human = new Models\Humans\MediumHuman();
         $human->from([
             "name"      => "Marry Jane",
             "age"       => 20,
@@ -132,7 +132,7 @@ final class ArrayAceesTest extends TestCase
     public function testCollectionArrayAccess() : void
     {
         $errors = [];
-        $pool = new Models\CarPool([
+        $pool = new Models\Cars\CarPool([
             [
                 "brand"     => "Toyota",
                 "model"     => "Corolla XRS",

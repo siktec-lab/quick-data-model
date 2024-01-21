@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace QDM\Tests\Models;
+namespace QDM\Tests\Models\General;
 
 use QDM\Attr;
 use QDM\DataModel;

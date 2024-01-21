@@ -21,7 +21,7 @@ final class FromVsExtendTest extends TestCase
 
     public function testFromTwiceOverride() : void
     {
-        $human  = new Models\SimpleHuman();
+        $human  = new Models\Humans\SimpleHuman();
         $status = $human->from([
             "name"      => "Marry Jane",
             "age"       => 20,
@@ -46,7 +46,7 @@ final class FromVsExtendTest extends TestCase
 
     public function testExtendTwiceOverride() : void
     {
-        $human  = new Models\SimpleHuman();
+        $human  = new Models\Humans\SimpleHuman();
         $status = $human->from([
             "name"      => "Marry Jane",
             "age"       => 20,
@@ -71,7 +71,7 @@ final class FromVsExtendTest extends TestCase
 
     public function testRevertAfterFromExtend() : void
     {
-        $human  = new Models\SimpleHuman();
+        $human  = new Models\Humans\SimpleHuman();
         $status = $human->from([
             "name"      => "Moshe Dayan",
         ]);

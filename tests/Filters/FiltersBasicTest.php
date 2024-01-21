@@ -23,7 +23,7 @@ class FiltersBasicTest extends TestCase
     {
 
         // A medium car:
-        $car = new Models\MediumCar();
+        $car = new Models\Cars\MediumCar();
         $errors = [];
         $status = $car->from([
             "brand" => "   toyota   ", // A trim + ucfirst an custom filter is applied

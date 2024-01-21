@@ -21,7 +21,7 @@ final class IteratorTest extends TestCase
 
     public function testSimpleDataModelIterator() : void
     {
-        $human = new Models\MediumHuman();
+        $human = new Models\Humans\MediumHuman();
         $human->from([
             "name"      => "Marry Jane",
             "age"       => 20,
@@ -36,7 +36,7 @@ final class IteratorTest extends TestCase
 
     public function testSimpleCollectionIterator() : void
     {
-        $pool = new Models\CarPool([
+        $pool = new Models\Cars\CarPool([
             [
                 "brand"     => "Toyota",
                 "model"     => "Corolla XRS",

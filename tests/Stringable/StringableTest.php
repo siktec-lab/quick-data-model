@@ -21,7 +21,7 @@ class StringableTest extends TestCase
 
     public function testModelToString() : void
     {
-        $human = new Models\SimpleHuman();
+        $human = new Models\Humans\SimpleHuman();
         $human->from([
             "name"      => "Marry Jane",
             "age"       => 20,
@@ -35,7 +35,7 @@ class StringableTest extends TestCase
 
     public function testModelDebugView() : void
     {
-        $car = new Models\MediumCar();
+        $car = new Models\Cars\MediumCar();
         $status = $car->from([
             "brand" => "   toyota   ", // A trim + ucfirst an custom filter is applied
             "model" => "   Corolla   ", // A trim filter is applied
@@ -50,14 +50,14 @@ class StringableTest extends TestCase
         $this->assertNotEmpty($struct["old_model"]);
 
         // With collections:
-        $carLot = new Models\CarLot();
+        $carLot = new Models\Cars\CarLot();
         $struct = $carLot->describe();
 
         $this->assertArrayHasKey("cars", $struct);
         // Nested cars describe:
         $expected = [
             "name" => "QDM\Collection",
-            "items" => "QDM\Tests\Models\SimpleCar"
+            "items" => "QDM\Tests\Models\Cars\SimpleCar"
         ];
         $this->assertEquals($expected, $struct["cars"]["nested"]);
     }

@@ -21,7 +21,7 @@ final class TypesAndDefaultsTest extends TestCase
 
     public function testDefaultValue() : void
     {
-        $human = new Models\SimpleHuman();
+        $human = new Models\Humans\SimpleHuman();
         $this->assertEquals("John Doe", $human->name);
         $this->assertEquals(-1, $human->age);
         $this->assertNull($human->nickname);
@@ -40,7 +40,7 @@ final class TypesAndDefaultsTest extends TestCase
     public function testFormArray() : void
     {
 
-        $human = new Models\SimpleHuman();
+        $human = new Models\Humans\SimpleHuman();
         $init = $human->from([
             "name"      => "Marry Jane",
             "age"       => 20,
@@ -52,7 +52,7 @@ final class TypesAndDefaultsTest extends TestCase
         $this->assertEquals(20, $human->age);
         $this->assertEquals("JD", $human->nickname);
 
-        $human = new Models\SimpleHuman();
+        $human = new Models\Humans\SimpleHuman();
         $init = $human->from([
             "name" => "Marry Jane",
             "age" => 20,
@@ -66,7 +66,7 @@ final class TypesAndDefaultsTest extends TestCase
 
     public function testRequiredProperty() : void
     {
-        $human = new Models\SimpleHuman();
+        $human = new Models\Humans\SimpleHuman();
         $errors = [];
         // name is required and have a default value we are
         // trying to set it to null so it should fail
@@ -79,7 +79,7 @@ final class TypesAndDefaultsTest extends TestCase
 
     public function testSameTypeEnforcing() : void
     {
-        $human = new Models\SimpleHuman();
+        $human = new Models\Humans\SimpleHuman();
 
         $errors = [];
         $status = $human->from(["age" => "Very Old"], $errors);
@@ -91,7 +91,7 @@ final class TypesAndDefaultsTest extends TestCase
 
     public function testMultipleTypes() : void
     {
-        $human = new Models\MediumHuman();
+        $human = new Models\Humans\MediumHuman();
         $errors = [];
         $status = $human->from(["height" => 7], $errors);
         $this->assertTrue($status);
@@ -119,7 +119,7 @@ final class TypesAndDefaultsTest extends TestCase
 
     public function testExtraCatcherWithFrom() : void
     {
-        $human = new Models\TwoModel();
+        $human = new Models\General\TwoModel();
         $errors = [];
         $status = $human->from([
             "name" => "two",

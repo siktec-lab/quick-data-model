@@ -32,10 +32,10 @@ class CollectionBasicTest extends TestCase
         ];
 
         // Using a constructor:
-        $lot = new Models\CarLot(
+        $lot = new Models\Cars\CarLot(
             cars: [],
             name: "My Car Lot",
-            owner: new Models\SimpleHuman(
+            owner: new Models\Humans\SimpleHuman(
                 name: "Marcos Quezada",
                 age: 30,
                 nickname: "Marcos"
@@ -47,7 +47,7 @@ class CollectionBasicTest extends TestCase
         $this->assertEquals($expected, $lot->toArray());
 
         // Using the from() method:
-        $lot = new Models\CarLot();
+        $lot = new Models\Cars\CarLot();
         $lot->from([
             "name" => "My Car Lot",
             "owner" => [
@@ -65,7 +65,7 @@ class CollectionBasicTest extends TestCase
     public function testCarLotCollectionFrom() : void
     {
 
-        $pool = new Models\CarPool();
+        $pool = new Models\Cars\CarPool();
         $errors = [];
         $status = $pool->from([
             [
@@ -92,8 +92,8 @@ class CollectionBasicTest extends TestCase
     public function testCarLotCollectionExtend() : void
     {
 
-        $pool1 = new Models\CarPool();
-        $pool2 = new Models\CarPool();
+        $pool1 = new Models\Cars\CarPool();
+        $pool2 = new Models\Cars\CarPool();
         $errors = [];
 
         //Initiate pool1
@@ -155,7 +155,7 @@ class CollectionBasicTest extends TestCase
     public function testCollectionOfCollection() : void
     {
 
-        $multi = new Models\MultipleCarPools();
+        $multi = new Models\Cars\MultipleCarPools();
         $errors = [];
         $success = $multi->from([
             "one" => [

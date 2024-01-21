@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace QDM\Tests\Models;
+namespace QDM\Tests\Models\Cars;
 
 use QDM\Attr;
 use QDM\DataModel;
-
+use QDM\Tests\Models;
 class CarLot extends DataModel
 {
     #[Attr\DataPoint]
@@ -17,7 +17,7 @@ class CarLot extends DataModel
         #[Attr\DataPoint(required: true)]
         public ?string $name = null,
         #[Attr\DataPoint]
-        public ?SimpleHuman $owner = null
+        public ?Models\Humans\SimpleHuman $owner = null
     ) {
         $this->cars = new CarPool($cars);
     }
