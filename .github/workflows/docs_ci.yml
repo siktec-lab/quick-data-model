@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          sparse-checkout: docs
       - name: Configure Git Credentials
         run: |
           git config user.name github-actions[bot]
@@ -24,6 +27,5 @@ jobs:
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: cd docs
       - run: pip install mkdocs-material 
       - run: mkdocs gh-deploy --force
