@@ -6,7 +6,7 @@ QDM is a modern PHP 8 Quick Data Model. It is a simple and fast way to create a 
 
 ## Quick Start
 - [Installation](#installation)
-- [DOCUMENTATION](https://siktec-lab.github.io/quick-data-model/docs)
+- [DOCUMENTATION](https://siktec-lab.github.io/quick-data-model/)
 - [A Sneak Peak](#a-sneak-peak)
 
 ## Installation
