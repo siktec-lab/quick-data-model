@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - main
+    paths: # only run on changes to the docs folder
+      - 'docs/**'
+      - 'mkdocs.yml'
 permissions:
   contents: write
 jobs:
@@ -12,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          sparse-checkout: docs
+          sparse-checkout: docs # only checkout the docs folder to save time
       - name: Configure Git Credentials
         run: |
           git config user.name github-actions[bot]

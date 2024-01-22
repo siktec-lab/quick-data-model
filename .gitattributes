@@ -12,3 +12,4 @@
 /.phpunit.result.cache export-ignore
 /local export-ignore
 /docs export-ignore
+/mkdocs.yml export-ignore
