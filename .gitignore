@@ -29,3 +29,7 @@ phpcs.result
 #no docker folder
 docker/*
 #no loc
+
+#python ignores:
+__pycache__/
+venv/
