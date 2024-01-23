@@ -16,10 +16,26 @@ theme:
     - navigation.top
     - search.suggest
     - search.highlight
-    - content.tabs.link
     - content.code.annotation
+    - content.tabs.link
     - content.code.copy
   language: en
+  icon:
+    admonition:
+      note: fontawesome/solid/note-sticky
+      abstract: fontawesome/solid/book
+      info: fontawesome/solid/circle-info
+      tip: fontawesome/solid/bullhorn
+      success: fontawesome/solid/check
+      question: fontawesome/solid/circle-question
+      warning: fontawesome/solid/triangle-exclamation
+      failure: fontawesome/solid/bomb
+      danger: fontawesome/solid/skull
+      bug: fontawesome/solid/robot
+      example: fontawesome/solid/flask
+      quote: fontawesome/solid/quote-left
+    annotation: material/arrow-right-circle
+
   palette:
     - scheme: slate
       toggle:
@@ -34,6 +50,9 @@ theme:
       primary: teal
       accent: lime
 
+extra_css:
+  - stylesheets/extra.css
+
 # plugins:
 #   - social
 
@@ -43,21 +62,25 @@ extra:
       link: https://github.com/siktec-lab/quick-data-model
 
 markdown_extensions:
-  - pymdownx.highlight:
-      anchor_linenums: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - admonition
-  - pymdownx.arithmatex:
-      generic: true
-  - footnotes
-  - pymdownx.details
-  - pymdownx.superfences
-  - pymdownx.mark
-  - attr_list
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji 
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      use_pygments: true
+      pygments_lang_class: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - footnotes
+  - pymdownx.details
+  - pymdownx.mark
+  - attr_list
+  - md_in_html
+  - pymdownx.superfences
+  
 
 copyright: |
   &copy; 2023 <a href="https://github.com/siktec-lab"  target="_blank" rel="noopener">SIKTEC</a>
